@@ -1,0 +1,10 @@
+{
+  "name": "nova-crypto-ai-academy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Persian RTL static web app for a crypto and AI academy.",
+  "scripts": {
+    "start": "python3 -m http.server 8000 --bind 127.0.0.1",
+    "check:js": "node --check app.js"
+  }
+}
