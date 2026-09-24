@@ -237,6 +237,81 @@
     .endStars span:nth-child(3){bottom:24%;left:22%;animation-delay:-2s}.endStars span:nth-child(4){bottom:18%;right:24%;animation-delay:-3s}
     @keyframes endGlow{0%,100%{box-shadow:0 0 10px rgba(217,184,127,.08)}50%{box-shadow:0 0 27px rgba(217,184,127,.3)}}
 
+
+    /* Premium graphic information cards */
+    .monogramBadge{
+      width:92px;height:92px;margin:0 auto 18px;border-radius:50%;
+      position:relative;display:grid;place-items:center;
+      background:radial-gradient(circle at 35% 30%,#fffefb,#f2e6d4);
+      border:1px solid rgba(185,151,99,.7);
+      box-shadow:inset 0 0 16px rgba(185,151,99,.09),0 8px 22px rgba(185,151,99,.08)
+    }
+    .monogramBadge:before,.monogramBadge:after{
+      content:"";position:absolute;border:1px solid rgba(185,151,99,.28);border-radius:50%
+    }
+    .monogramBadge:before{inset:8px}.monogramBadge:after{inset:20px;opacity:.55}
+    .monogramInner{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--wine);font-family:Georgia,serif;font-size:23px}
+    .monogramHeart{position:relative;width:16px;height:15px}
+    .monogramHeart:before,.monogramHeart:after{
+      content:"";position:absolute;top:1px;width:8px;height:12px;border:1px solid var(--wine);border-bottom:0;border-radius:8px 8px 0 0
+    }
+    .monogramHeart:before{left:1px;transform:rotate(-45deg);transform-origin:0 100%}
+    .monogramHeart:after{right:1px;transform:rotate(45deg);transform-origin:100% 100%}
+
+    .infoSection{padding:0 28px 40px}
+    .infoGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .infoCard{
+      position:relative;overflow:hidden;text-align:center;padding:20px 16px 22px;
+      border:1px solid rgba(126,99,65,.20);border-radius:24px;
+      background:linear-gradient(180deg,#fffdf9,rgba(255,255,255,.66));
+      box-shadow:0 12px 30px rgba(185,151,99,.055)
+    }
+    .infoCard:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% -10%,rgba(185,151,99,.11),transparent 32%);pointer-events:none}
+    .iconWrap{
+      width:78px;height:78px;margin:0 auto 14px;border-radius:22px;border:1px solid rgba(185,151,99,.34);
+      background:linear-gradient(180deg,#fffdfb,#f6ece1);display:grid;place-items:center;
+      box-shadow:inset 0 0 14px rgba(185,151,99,.08)
+    }
+    .cardLabel{color:var(--gold);font-size:11px;font-weight:800;letter-spacing:.07em;margin-bottom:7px}
+    .cardMain{font-size:17px;line-height:1.8;font-weight:800;color:var(--ink)}
+    .cardSub{font-size:12px;line-height:1.9;color:var(--muted);margin-top:3px}
+
+    .calendarIcon{position:relative;width:46px;height:43px;border:1.7px solid var(--wine);border-radius:12px;background:#fff;overflow:visible}
+    .calendarIcon:before{content:"";position:absolute;left:-1.7px;right:-1.7px;top:-1.7px;height:13px;border-radius:12px 12px 4px 4px;background:linear-gradient(135deg,var(--wine),#b23c5e)}
+    .calendarRings{position:absolute;top:-6px;left:0;right:0;display:flex;justify-content:space-evenly;z-index:2}
+    .calendarRings span{width:6px;height:11px;border-radius:5px;background:var(--gold)}
+    .calendarDay{position:absolute;left:0;right:0;bottom:5px;text-align:center;color:var(--wine);font-family:Georgia,serif;font-size:19px;font-weight:700}
+
+    .clockIcon{position:relative;width:48px;height:48px;border:1.8px solid var(--wine);border-radius:50%;background:radial-gradient(circle,#fffdfb,#f6ecdf)}
+    .clockIcon:before{content:"";position:absolute;left:23px;top:11px;width:2px;height:14px;background:var(--wine);border-radius:2px}
+    .clockIcon:after{content:"";position:absolute;left:23px;top:24px;width:12px;height:2px;background:var(--gold);border-radius:2px;transform-origin:left center;transform:rotate(38deg)}
+    .clockCenter{position:absolute;left:20px;top:20px;width:8px;height:8px;border-radius:50%;background:var(--wine);box-shadow:0 0 0 3px rgba(185,151,99,.16)}
+
+    .mapIcon{position:relative;width:50px;height:50px}
+    .mapPin{position:absolute;left:14px;top:2px;width:22px;height:32px;background:linear-gradient(180deg,var(--wine),#b0395d);border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 10px 18px rgba(122,38,56,.16)}
+    .mapPin:before{content:"";position:absolute;left:5px;top:5px;width:12px;height:12px;border-radius:50%;background:#fff}
+    .mapTrail{position:absolute;left:3px;right:3px;bottom:5px;height:9px;border-radius:999px;background:linear-gradient(90deg,rgba(185,151,99,.08),rgba(185,151,99,.30),rgba(185,151,99,.08))}
+
+    .venueHeaderIcon{
+      width:78px;height:78px;margin:0 auto 16px;border-radius:50%;border:1px solid rgba(185,151,99,.38);
+      background:radial-gradient(circle,#fffefb,#f2e5d2);display:grid;place-items:center
+    }
+    .venueCard{border-radius:28px!important;box-shadow:0 12px 28px rgba(185,151,99,.055)}
+    .action span[aria-hidden="true"]{font-size:18px}
+
+    .endScene{padding:58px 22px calc(66px + env(safe-area-inset-bottom))}
+    .endingMeta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:700px;margin:22px auto 0}
+    .miniMeta{
+      min-height:54px;border:1px solid rgba(217,184,127,.25);border-radius:16px;background:rgba(255,255,255,.05);
+      display:flex;align-items:center;justify-content:center;gap:8px;color:#f6e7dc;font-size:12px;padding:8px 10px
+    }
+    .miniIc{font-size:16px;color:#f0cb85}
+
+    @media(max-width:760px){
+      .infoGrid{grid-template-columns:1fr}
+      .endingMeta{grid-template-columns:1fr}
+    }
+
     @media(max-width:640px){
       .page{width:100%}.photoWrap{padding:0;background:#111}.photoFrame{border-radius:0}.photoLine{inset:10px;border-radius:0}.paper{margin:0;border-left:0;border-right:0;box-shadow:none}
       .photoFrame img{aspect-ratio:1/1.06;object-position:center 42%}.photoNames{bottom:25px}.photoNames strong{font-size:clamp(40px,13vw,64px)}
@@ -251,7 +326,9 @@
 <body>
   <div id="entryGate" class="entryGate">
     <div class="entryCard">
-      <div class="entryMonogram">S ♡ S</div>
+      <div class="monogramBadge">
+        <div class="monogramInner"><span>S</span><span class="monogramHeart"></span><span>S</span></div>
+      </div>
       <div class="entrySmall">WEDDING INVITATION</div>
       <h1>عروسی <span>سمیر و ثمین</span></h1>
       <p>برای ورود به دعوت‌نامه و شروع موسیقی، دکمه زیر را لمس کنید.</p>
@@ -290,20 +367,40 @@
 
     <section class="paper"><span class="luxuryFlourish lf1"></span><span class="luxuryFlourish lf2"></span>
       <div class="inviteHead">
-        <div class="seal">S ♡ S</div>
+        <div class="seal"><div class="monogramInner"><span>S</span><span class="monogramHeart"></span><span>S</span></div></div>
         <p class="tiny">به نام خالق عشق</p>
         <h1>جشن <span>پیوند</span> ما</h1>
         <div class="ornament"><b></b><i></i><b></b></div>
         <p class="inviteText">با افتخار از شما دعوت می‌کنیم تا در شبی که آغاز فصل تازه زندگی‌مان است، با حضور گرم خود شادی این لحظه را برایمان ماندگارتر کنید.</p>
       </div>
 
-      <div class="details">
-        <div class="detailGrid">
-          <div class="detail"><em>۲۸</em><small>تاریخ مراسم</small><strong>پنجشنبه ۲۸ آبان ۱۴۰۵</strong></div>
-          <div class="detail"><em>۱۹:۰۰</em><small>شروع مراسم</small><strong>ساعت ۷ شب</strong></div>
-          <div class="detail"><em>⌖</em><small>محل برگزاری</small><strong>تالار مجموعه کوهستان مبارکه</strong></div>
+      <section class="infoSection">
+        <div class="infoGrid">
+          <article class="infoCard">
+            <div class="iconWrap">
+              <div class="calendarIcon">
+                <div class="calendarRings"><span></span><span></span></div>
+                <div class="calendarDay">۲۸</div>
+              </div>
+            </div>
+            <div class="cardLabel">تاریخ مراسم</div>
+            <div class="cardMain">پنجشنبه ۲۸ آبان ۱۴۰۵</div>
+            <div class="cardSub">پنجشنبه‌ای برای آغاز یک زندگی تازه</div>
+          </article>
+          <article class="infoCard">
+            <div class="iconWrap"><div class="clockIcon"><span class="clockCenter"></span></div></div>
+            <div class="cardLabel">شروع مراسم</div>
+            <div class="cardMain">ساعت ۷ شب</div>
+            <div class="cardSub">۱۹:۰۰ · آغاز جشن و دیدار عزیزان</div>
+          </article>
+          <article class="infoCard">
+            <div class="iconWrap"><div class="mapIcon"><span class="mapPin"></span><span class="mapTrail"></span></div></div>
+            <div class="cardLabel">محل برگزاری</div>
+            <div class="cardMain">تالار مجموعه کوهستان مبارکه</div>
+            <div class="cardSub">منتظر حضورتان در این شب خاطره‌انگیز هستیم</div>
+          </article>
         </div>
-      </div>
+      </section>
 
       <section class="countdown">
         <div class="sectionTitle"><small>تا دیدارمان</small><h2>شمارش معکوس تا جشن</h2></div>
@@ -317,6 +414,7 @@
 
       <section class="venue">
         <div class="venueCard">
+          <div class="venueHeaderIcon"><div class="mapIcon"><span class="mapPin"></span><span class="mapTrail"></span></div></div>
           <div class="tiny">LOCATION &amp; REMINDER</div>
           <h3>منتظر دیدارتان هستیم</h3>
           <p>پنجشنبه ۲۸ آبان ۱۴۰۵ · ساعت ۷ شب<br/>تالار مجموعه کوهستان مبارکه</p>
@@ -333,8 +431,12 @@
       <div class="endStars"><span></span><span></span><span></span><span></span></div>
       <div class="endRings"><i></i><i></i></div>
       <h2>با عشق، <span>سمیر و ثمین</span></h2>
-      <p>بی‌صبرانه منتظر حضور ارزشمند شما در شب خاطره‌انگیزمان هستیم تا این جشن را در کنار هم زیباتر کنیم.</p>
-      <div class="endBadge">✨ پنجشنبه ۲۸ آبان ۱۴۰۵ · تالار مجموعه کوهستان مبارکه ✨</div>
+      <p>بی‌صبرانه منتظر حضور ارزشمند شما در شب خاطره‌انگیزمان هستیم تا این جشن را در کنار هم به زیباترین شکل رقم بزنیم.</p>
+      <div class="endingMeta">
+        <div class="miniMeta"><span class="miniIc">📅</span><span>پنجشنبه ۲۸ آبان ۱۴۰۵</span></div>
+        <div class="miniMeta"><span class="miniIc">⏰</span><span>ساعت ۷ شب</span></div>
+        <div class="miniMeta"><span class="miniIc">📍</span><span>تالار مجموعه کوهستان مبارکه</span></div>
+      </div>
     </section>
   </div>
 
