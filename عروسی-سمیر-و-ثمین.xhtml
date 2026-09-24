@@ -175,6 +175,68 @@
       50%{translate:8px 12px;opacity:.16}
     }
   
+
+    .entryGate{
+      position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+      padding:20px;background:
+        linear-gradient(180deg,rgba(23,13,13,.68),rgba(23,13,13,.80)),
+        radial-gradient(circle at 50% 22%,rgba(255,226,171,.18),transparent 35%),
+        url('https://d2ol7oe51mr4n9.cloudfront.net/user_3FwgBBy0JcmaC1pei2GnvuvQglo/5debcce6-a988-4cf5-a515-05e8bc88e3b8.jpg') center/cover no-repeat;
+      transition:opacity .7s ease,visibility .7s ease;
+    }
+    .entryGate.open{opacity:0;visibility:hidden;pointer-events:none}
+    .entryCard{
+      width:min(92vw,430px);padding:34px 24px 30px;text-align:center;position:relative;overflow:hidden;
+      border:1px solid rgba(255,240,215,.70);border-radius:28px;
+      background:rgba(255,250,245,.86);backdrop-filter:blur(12px);
+      box-shadow:0 24px 70px rgba(0,0,0,.26)
+    }
+    .entryCard:before,.entryCard:after{
+      content:"";position:absolute;border:1px solid rgba(185,151,99,.34);border-radius:50%;pointer-events:none
+    }
+    .entryCard:before{width:150px;height:150px;top:-82px;right:-72px}
+    .entryCard:after{width:126px;height:126px;bottom:-72px;left:-58px}
+    .entryMonogram{
+      width:84px;height:84px;margin:0 auto 18px;border:1px solid rgba(185,151,99,.62);border-radius:50%;
+      display:grid;place-items:center;background:radial-gradient(circle,#fffdf9,#f2e4d0);
+      color:var(--wine);font-family:Georgia,serif;font-size:18px
+    }
+    .entrySmall{margin-bottom:10px;color:var(--gold);font-family:Georgia,serif;font-size:11px;letter-spacing:.16em}
+    .entryCard h1{margin:0;color:var(--ink);font-size:clamp(32px,9vw,48px);line-height:1.25}
+    .entryCard h1 span{color:var(--wine)}
+    .entryCard p{max-width:290px;margin:16px auto 0;color:var(--muted);font-size:14px;line-height:2}
+    .entryButton{
+      width:100%;min-height:58px;margin-top:24px;border:0;border-radius:17px;cursor:pointer;
+      background:linear-gradient(135deg,var(--wine),#9c3250);color:#fff;font-weight:800;font-size:16px;
+      box-shadow:0 14px 36px rgba(122,38,56,.25);transition:transform .2s ease,box-shadow .2s ease
+    }
+    .entryButton:active{transform:scale(.985)}
+    .entryHint{margin-top:11px;color:#82756d;font-size:11px}
+    .endScene{
+      position:relative;overflow:hidden;padding:58px 22px calc(66px + env(safe-area-inset-bottom));
+      text-align:center;color:#fff;background:
+        radial-gradient(circle at 50% 0%,rgba(185,151,99,.16),transparent 27%),
+        linear-gradient(180deg,#352725,#211715)
+    }
+    .endScene:before,.endScene:after{
+      content:"";position:absolute;width:260px;height:260px;border:1px solid rgba(217,184,127,.12);border-radius:50%
+    }
+    .endScene:before{top:-155px;left:-110px}.endScene:after{bottom:-165px;right:-100px}
+    .endRings{position:relative;width:86px;height:50px;margin:0 auto 19px}
+    .endRings i{position:absolute;top:4px;width:40px;height:40px;border:1.5px solid #d9b87f;border-radius:50%;animation:endGlow 3.5s ease-in-out infinite}
+    .endRings i:first-child{right:13px}.endRings i:last-child{left:13px;animation-delay:-1.7s}
+    .endScene h2{margin:0;font-size:clamp(29px,5vw,42px);line-height:1.5}
+    .endScene h2 span{color:#f0cb85}
+    .endScene p{max-width:520px;margin:14px auto 18px;color:#e6d6cf;font-size:14px;line-height:2}
+    .endBadge{
+      display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:9px 15px;border-radius:999px;
+      border:1px solid rgba(217,184,127,.32);background:rgba(255,255,255,.04);color:#f3e2d7;font-size:12px
+    }
+    .endStars span{position:absolute;width:4px;height:4px;border-radius:50%;background:#fff3ca;box-shadow:0 0 10px #ffe5a6;animation:twinkle 4s ease-in-out infinite}
+    .endStars span:nth-child(1){top:19%;left:17%}.endStars span:nth-child(2){top:28%;right:17%;animation-delay:-1s}
+    .endStars span:nth-child(3){bottom:24%;left:22%;animation-delay:-2s}.endStars span:nth-child(4){bottom:18%;right:24%;animation-delay:-3s}
+    @keyframes endGlow{0%,100%{box-shadow:0 0 10px rgba(217,184,127,.08)}50%{box-shadow:0 0 27px rgba(217,184,127,.3)}}
+
     @media(max-width:640px){
       .page{width:100%}.photoWrap{padding:0;background:#111}.photoFrame{border-radius:0}.photoLine{inset:10px;border-radius:0}.paper{margin:0;border-left:0;border-right:0;box-shadow:none}
       .photoFrame img{aspect-ratio:1/1.06;object-position:center 42%}.photoNames{bottom:25px}.photoNames strong{font-size:clamp(40px,13vw,64px)}
@@ -187,6 +249,17 @@
   ]]></style>
 </head>
 <body>
+  <div id="entryGate" class="entryGate">
+    <div class="entryCard">
+      <div class="entryMonogram">S ♡ S</div>
+      <div class="entrySmall">WEDDING INVITATION</div>
+      <h1>عروسی <span>سمیر و ثمین</span></h1>
+      <p>برای ورود به دعوت‌نامه و شروع موسیقی، دکمه زیر را لمس کنید.</p>
+      <button id="entryButton" class="entryButton" type="button">ورود به دعوت‌نامه</button>
+      <div class="entryHint">با ورود، موسیقی و فضای جشن آغاز می‌شود</div>
+    </div>
+  </div>
+
   <div class="page">
     <audio id="music" preload="auto" autoplay="autoplay" loop="loop" src="https://d2ol7oe51mr4n9.cloudfront.net/user_3FwgBBy0JcmaC1pei2GnvuvQglo/49c9b4fa-9549-4ce0-99b7-59d3f62f36f8.mp3"></audio>
     <button id="musicBtn" class="music" type="button"><b>♫</b><span>پخش موسیقی</span></button>
@@ -248,53 +321,44 @@
           <h3>منتظر دیدارتان هستیم</h3>
           <p>پنجشنبه ۲۸ آبان ۱۴۰۵ · ساعت ۷ شب<br/>تالار مجموعه کوهستان مبارکه</p>
           <div class="actions">
-            <a class="action primary" target="_blank" rel="noreferrer" href="https://www.google.com/maps/search/?api=1&amp;query=32.362196361035494,51.541981298897035">Google Maps ↗</a>
-            <a class="action secondary" target="_blank" rel="noreferrer" href="https://maps.apple.com/maps?ll=32.362196361035494,51.541981298897035&amp;q=32.362196361035494,51.541981298897035&amp;t=m">Apple Maps ↗</a>
-            <button class="action calendar" id="calendarBtn" type="button">＋ افزودن به تقویم</button>
+            <a class="action primary" target="_blank" rel="noreferrer" href="https://www.google.com/maps/search/?api=1&amp;query=32.362196361035494,51.541981298897035"><span aria-hidden="true">📍</span> Google Maps</a>
+            <a class="action secondary" target="_blank" rel="noreferrer" href="https://maps.apple.com/maps?ll=32.362196361035494,51.541981298897035&amp;q=32.362196361035494,51.541981298897035&amp;t=m"><span aria-hidden="true">🧭</span> Apple Maps</a>
+            <button class="action calendar" id="calendarBtn" type="button"><span aria-hidden="true">🗓️</span> افزودن به تقویم</button>
           </div>
         </div>
       </section>
     </section>
 
-    <footer>
-      <div class="rings"><i></i><i></i></div>
-      <strong>با عشق، سمیر و ثمین</strong>
-      <span>پنجشنبه ۲۸ آبان ۱۴۰۵</span>
-    </footer>
+    <section class="endScene">
+      <div class="endStars"><span></span><span></span><span></span><span></span></div>
+      <div class="endRings"><i></i><i></i></div>
+      <h2>با عشق، <span>سمیر و ثمین</span></h2>
+      <p>بی‌صبرانه منتظر حضور ارزشمند شما در شب خاطره‌انگیزمان هستیم تا این جشن را در کنار هم زیباتر کنیم.</p>
+      <div class="endBadge">✨ پنجشنبه ۲۸ آبان ۱۴۰۵ · تالار مجموعه کوهستان مبارکه ✨</div>
+    </section>
   </div>
 
   <script type="application/javascript"><![CDATA[
     (function(){
-      var music=document.getElementById('music'),btn=document.getElementById('musicBtn'),autoUnlocked=false;
+      var music=document.getElementById('music'),btn=document.getElementById('musicBtn');
+      var gate=document.getElementById('entryGate'),entryButton=document.getElementById('entryButton');
+      document.body.style.overflow='hidden';
       function setMusicUi(on){
         btn.innerHTML=on?'<b>❚❚</b><span>موسیقی روشن</span>':'<b>♫</b><span>پخش موسیقی</span>';
       }
-      function tryAutoplay(){
-        if(!music)return;
-        music.volume=.92;
+      function playMusic(){
+        music.volume=.95;
         var p=music.play();
-        if(p&&p.then)p.then(function(){setMusicUi(true);autoUnlocked=true}).catch(function(){setMusicUi(false)});
+        if(p&&p.then)p.then(function(){setMusicUi(true)}).catch(function(){setMusicUi(false)});
       }
-      btn.addEventListener('click',function(){
-        if(music.paused){
-          var p=music.play();
-          if(p&&p.then)p.then(function(){setMusicUi(true);autoUnlocked=true}).catch(function(){setMusicUi(false)});
-        }else{
-          music.pause();setMusicUi(false);
-        }
+      entryButton.addEventListener('click',function(){
+        gate.classList.add('open');
+        document.body.style.overflow='auto';
+        playMusic();
       });
-      /* Browsers that permit audible autoplay start immediately. */
-      tryAutoplay();
-      document.addEventListener('DOMContentLoaded',tryAutoplay,{once:true});
-      window.addEventListener('load',tryAutoplay,{once:true});
-      /* If audible autoplay is blocked, the first touch/click anywhere unlocks the music. */
-      function unlockOnFirstGesture(){
-        if(!autoUnlocked&&music.paused)tryAutoplay();
-        document.removeEventListener('pointerdown',unlockOnFirstGesture,true);
-        document.removeEventListener('touchstart',unlockOnFirstGesture,true);
-      }
-      document.addEventListener('pointerdown',unlockOnFirstGesture,true);
-      document.addEventListener('touchstart',unlockOnFirstGesture,true);
+      btn.addEventListener('click',function(){
+        if(music.paused){playMusic()}else{music.pause();setMusicUi(false)}
+      });
       var target=new Date('2026-11-19T19:00:00+03:30').getTime();
       function pad(n){return String(n).padStart(2,'0')}
       function tick(){
