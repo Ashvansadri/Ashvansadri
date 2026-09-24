@@ -78,6 +78,103 @@
     footer{padding:46px 20px calc(46px + env(safe-area-inset-bottom));background:#2c2320;color:#fff;text-align:center}
     footer .rings{position:relative;width:66px;height:38px;margin:0 auto 17px}.rings i{position:absolute;top:4px;width:31px;height:31px;border:1px solid #d8b983;border-radius:50%}.rings i:first-child{right:9px}.rings i:last-child{left:9px}
     footer strong{display:block;font-size:18px;margin-bottom:7px}footer span{color:#d9cbbd;font-size:11px}
+
+    /* Wedding celebration atmosphere */
+    .photoFrame:after{z-index:1}
+    .photoLine{z-index:7}
+    .photoNames{z-index:8}
+
+    .celebrationGlow{
+      position:absolute;inset:0;z-index:2;pointer-events:none;
+      background:
+        radial-gradient(circle at 16% 16%,rgba(255,244,215,.27),transparent 18%),
+        radial-gradient(circle at 84% 12%,rgba(255,224,173,.23),transparent 19%),
+        radial-gradient(circle at 50% 8%,rgba(255,255,255,.12),transparent 22%),
+        linear-gradient(115deg,transparent 28%,rgba(255,241,215,.08) 46%,transparent 64%);
+      mix-blend-mode:screen;
+    }
+
+    .petals,.bokehLights,.floralMist{
+      position:absolute;inset:0;pointer-events:none;
+    }
+    .petals{z-index:5;overflow:hidden}
+    .bokehLights{z-index:3;overflow:hidden}
+    .floralMist{z-index:4;overflow:hidden}
+
+    .petal{
+      position:absolute;top:-13%;width:18px;height:12px;
+      border-radius:72% 28% 68% 32%;
+      background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(246,210,220,.88) 52%,rgba(218,162,180,.72));
+      opacity:.43;filter:drop-shadow(0 0 7px rgba(255,238,245,.5));
+      transform-origin:center;animation:petalFall linear infinite;
+    }
+    .petal:nth-child(1){left:5%;animation-duration:10.7s;animation-delay:-2s}
+    .petal:nth-child(2){left:14%;animation-duration:13.4s;animation-delay:-7s;scale:.8}
+    .petal:nth-child(3){left:23%;animation-duration:11.8s;animation-delay:-4s;scale:1.15}
+    .petal:nth-child(4){left:32%;animation-duration:15s;animation-delay:-11s;scale:.72}
+    .petal:nth-child(5){left:41%;animation-duration:12.2s;animation-delay:-6s;scale:.95}
+    .petal:nth-child(6){left:50%;animation-duration:14.2s;animation-delay:-9s;scale:1.12}
+    .petal:nth-child(7){left:59%;animation-duration:11.3s;animation-delay:-3s;scale:.76}
+    .petal:nth-child(8){left:68%;animation-duration:13.8s;animation-delay:-8s;scale:1.05}
+    .petal:nth-child(9){left:77%;animation-duration:12.7s;animation-delay:-5s;scale:.9}
+    .petal:nth-child(10){left:86%;animation-duration:15.3s;animation-delay:-13s;scale:1.18}
+    .petal:nth-child(11){left:93%;animation-duration:11.9s;animation-delay:-6.5s;scale:.7}
+    .petal:nth-child(12){left:36%;animation-duration:16s;animation-delay:-14s;scale:.64}
+
+    .bokeh{
+      position:absolute;border-radius:50%;
+      background:radial-gradient(circle,rgba(255,246,219,.7) 0,rgba(255,228,175,.25) 45%,transparent 72%);
+      filter:blur(1.4px);opacity:.3;animation:bokehPulse 5.4s ease-in-out infinite;
+    }
+    .bokeh:nth-child(1){width:58px;height:58px;top:9%;left:8%;animation-delay:-1s}
+    .bokeh:nth-child(2){width:82px;height:82px;top:5%;right:7%;animation-delay:-3.2s}
+    .bokeh:nth-child(3){width:38px;height:38px;top:31%;right:12%;animation-delay:-2s}
+    .bokeh:nth-child(4){width:67px;height:67px;bottom:18%;left:9%;animation-delay:-4.5s}
+    .bokeh:nth-child(5){width:44px;height:44px;bottom:29%;right:17%;animation-delay:-.4s}
+    .bokeh:nth-child(6){width:31px;height:31px;top:18%;left:46%;animation-delay:-2.8s}
+
+    .mistFlower{
+      position:absolute;width:94px;height:94px;opacity:.12;filter:blur(.2px);
+      background:
+        radial-gradient(ellipse at 50% 20%,rgba(255,247,237,.95) 0 17%,transparent 18%),
+        radial-gradient(ellipse at 80% 50%,rgba(255,247,237,.9) 0 17%,transparent 18%),
+        radial-gradient(ellipse at 50% 80%,rgba(255,247,237,.9) 0 17%,transparent 18%),
+        radial-gradient(ellipse at 20% 50%,rgba(255,247,237,.9) 0 17%,transparent 18%),
+        radial-gradient(circle at 50% 50%,rgba(220,181,111,.95) 0 10%,transparent 11%);
+      animation:flowerDrift 8s ease-in-out infinite;
+    }
+    .mistFlower.f1{top:7%;left:-18px;transform:rotate(-12deg)}
+    .mistFlower.f2{top:17%;right:-24px;transform:rotate(22deg);animation-delay:-3s}
+    .mistFlower.f3{bottom:22%;left:8%;width:62px;height:62px;animation-delay:-5s}
+
+    .luxuryFlourish{
+      position:absolute;z-index:1;pointer-events:none;width:150px;height:150px;opacity:.3;
+      border:1px solid rgba(185,151,99,.35);border-radius:50%;
+    }
+    .luxuryFlourish.lf1{top:18px;right:-88px}
+    .luxuryFlourish.lf2{bottom:18px;left:-88px}
+    .luxuryFlourish:before,.luxuryFlourish:after{
+      content:"";position:absolute;border:1px solid rgba(185,151,99,.28);border-radius:50%;
+    }
+    .luxuryFlourish:before{inset:18px}
+    .luxuryFlourish:after{inset:36px}
+
+    @keyframes petalFall{
+      0%{transform:translate3d(0,-55px,0) rotate(0deg);opacity:0}
+      10%{opacity:.42}
+      48%{transform:translate3d(22px,250px,0) rotate(145deg);opacity:.5}
+      78%{opacity:.36}
+      100%{transform:translate3d(-18px,590px,0) rotate(330deg);opacity:0}
+    }
+    @keyframes bokehPulse{
+      0%,100%{opacity:.17;transform:scale(.9)}
+      50%{opacity:.42;transform:scale(1.12)}
+    }
+    @keyframes flowerDrift{
+      0%,100%{translate:0 0;opacity:.08}
+      50%{translate:8px 12px;opacity:.16}
+    }
+  
     @media(max-width:640px){
       .page{width:100%}.photoWrap{padding:0;background:#111}.photoFrame{border-radius:0}.photoLine{inset:10px;border-radius:0}.paper{margin:0;border-left:0;border-right:0;box-shadow:none}
       .photoFrame img{aspect-ratio:1/1.06;object-position:center 42%}.photoNames{bottom:25px}.photoNames strong{font-size:clamp(40px,13vw,64px)}
@@ -86,17 +183,30 @@
       .countdown{padding:42px 18px}.countGrid{grid-template-columns:repeat(2,1fr)}.unit{min-height:104px}.unit:nth-child(3),.unit:nth-child(4){border-top:1px solid var(--line)}.unit:nth-child(3){border-right:0}
       .venue{padding:44px 18px}.actions{grid-template-columns:1fr}.calendar{grid-column:auto}
     }
-    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.petal,.bokeh,.mistFlower{animation:none!important}.petals{display:none}}
   ]]></style>
 </head>
 <body>
   <div class="page">
-    <audio id="music" preload="none" loop="loop" src="https://d2ol7oe51mr4n9.cloudfront.net/user_3FwgBBy0JcmaC1pei2GnvuvQglo/49c9b4fa-9549-4ce0-99b7-59d3f62f36f8.mp3"></audio>
+    <audio id="music" preload="auto" autoplay="autoplay" loop="loop" src="https://d2ol7oe51mr4n9.cloudfront.net/user_3FwgBBy0JcmaC1pei2GnvuvQglo/49c9b4fa-9549-4ce0-99b7-59d3f62f36f8.mp3"></audio>
     <button id="musicBtn" class="music" type="button"><b>♫</b><span>پخش موسیقی</span></button>
 
     <section class="photoWrap">
       <div class="photoFrame">
         <img src="https://d2ol7oe51mr4n9.cloudfront.net/user_3FwgBBy0JcmaC1pei2GnvuvQglo/5debcce6-a988-4cf5-a515-05e8bc88e3b8.jpg" alt="سمیر و ثمین" />
+        <div class="celebrationGlow"></div>
+        <div class="bokehLights" aria-hidden="true">
+          <span class="bokeh"></span><span class="bokeh"></span><span class="bokeh"></span>
+          <span class="bokeh"></span><span class="bokeh"></span><span class="bokeh"></span>
+        </div>
+        <div class="floralMist" aria-hidden="true">
+          <span class="mistFlower f1"></span><span class="mistFlower f2"></span><span class="mistFlower f3"></span>
+        </div>
+        <div class="petals" aria-hidden="true">
+          <span class="petal"></span><span class="petal"></span><span class="petal"></span><span class="petal"></span>
+          <span class="petal"></span><span class="petal"></span><span class="petal"></span><span class="petal"></span>
+          <span class="petal"></span><span class="petal"></span><span class="petal"></span><span class="petal"></span>
+        </div>
         <div class="photoLine"></div>
         <div class="photoNames">
           <small>THE BEGINNING OF FOREVER</small>
@@ -105,7 +215,7 @@
       </div>
     </section>
 
-    <section class="paper">
+    <section class="paper"><span class="luxuryFlourish lf1"></span><span class="luxuryFlourish lf2"></span>
       <div class="inviteHead">
         <div class="seal">S ♡ S</div>
         <p class="tiny">به نام خالق عشق</p>
@@ -155,15 +265,36 @@
 
   <script type="application/javascript"><![CDATA[
     (function(){
-      var music=document.getElementById('music'),btn=document.getElementById('musicBtn');
+      var music=document.getElementById('music'),btn=document.getElementById('musicBtn'),autoUnlocked=false;
+      function setMusicUi(on){
+        btn.innerHTML=on?'<b>❚❚</b><span>موسیقی روشن</span>':'<b>♫</b><span>پخش موسیقی</span>';
+      }
+      function tryAutoplay(){
+        if(!music)return;
+        music.volume=.92;
+        var p=music.play();
+        if(p&&p.then)p.then(function(){setMusicUi(true);autoUnlocked=true}).catch(function(){setMusicUi(false)});
+      }
       btn.addEventListener('click',function(){
         if(music.paused){
           var p=music.play();
-          if(p&&p.then)p.then(function(){btn.innerHTML='<b>❚❚</b><span>موسیقی روشن</span>'}).catch(function(){});
+          if(p&&p.then)p.then(function(){setMusicUi(true);autoUnlocked=true}).catch(function(){setMusicUi(false)});
         }else{
-          music.pause();btn.innerHTML='<b>♫</b><span>پخش موسیقی</span>';
+          music.pause();setMusicUi(false);
         }
       });
+      /* Browsers that permit audible autoplay start immediately. */
+      tryAutoplay();
+      document.addEventListener('DOMContentLoaded',tryAutoplay,{once:true});
+      window.addEventListener('load',tryAutoplay,{once:true});
+      /* If audible autoplay is blocked, the first touch/click anywhere unlocks the music. */
+      function unlockOnFirstGesture(){
+        if(!autoUnlocked&&music.paused)tryAutoplay();
+        document.removeEventListener('pointerdown',unlockOnFirstGesture,true);
+        document.removeEventListener('touchstart',unlockOnFirstGesture,true);
+      }
+      document.addEventListener('pointerdown',unlockOnFirstGesture,true);
+      document.addEventListener('touchstart',unlockOnFirstGesture,true);
       var target=new Date('2026-11-19T19:00:00+03:30').getTime();
       function pad(n){return String(n).padStart(2,'0')}
       function tick(){
