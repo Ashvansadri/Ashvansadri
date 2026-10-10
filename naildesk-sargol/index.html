@@ -90,7 +90,7 @@ function brand(){return `<div class="brand"><div class="logo" style="font-family
 function toast(t){let d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2200)}
 async function boot(){app.innerHTML='<div class="auth"><div class="authBox">'+brand()+'<p style="color:var(--muted);font-size:12px">در حال اتصال به NailDesk...</p></div></div>';try{state.pub=await api('public-config')}catch(e){app.innerHTML='<div class="auth"><div class="authBox">'+brand()+'<div class="err">ارتباط با سرور موقتاً برقرار نشد.</div><p style="font-size:11px;color:var(--muted);line-height:2">سیستم به‌صورت خودکار سه بار تلاش کرده است. اطلاعات شما محفوظ است؛ روی «تلاش دوباره» بزنید.</p><button class="btn" id="retryBoot" style="width:100%">تلاش دوباره</button></div></div>';document.getElementById('retryBoot').onclick=boot;return}route()}
 window.addEventListener('hashchange',route);
-function route(){const h=location.hash.slice(1);if(h==='admin')return adminEntry();if(h==='demo')return demo();publicHome()}
+function route(){const h=location.hash.slice(1);if(h==='admin')return adminEntry();if(h==='demo')return demo();if(['booking','works','servicesPub'].includes(h)){if(!document.getElementById(h))publicHome();requestAnimationFrame(()=>document.getElementById(h)?.scrollIntoView({behavior:'smooth',block:'start'}));return}publicHome()}
 function publicHome(){const p=state.pub,works=(p.portfolio||[]).filter(x=>x.active!==false&&x.image_url),hero=works.slice(0,3);app.innerHTML=`
 <div class="wrap">
   <div class="top">
