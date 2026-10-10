@@ -63,6 +63,7 @@ body{background:radial-gradient(circle at 12% 8%,#f6d8d4 0,transparent 24rem),ra
 <body>
 <div id="app"></div><div id="modal"></div>
 <script>
+if(location.hostname==='naildesk-sargol.onrender.com'){location.replace('https://sargol-nail.onrender.com'+location.pathname+location.search+location.hash)}
 const API='https://dqvoxpwzjeetxhssryti.supabase.co/functions/v1/naildesk';
 const app=document.getElementById('app'),modal=document.getElementById('modal');
 let state={pub:null,data:null,route:'dashboard'};
