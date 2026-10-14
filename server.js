@@ -118,7 +118,7 @@ app.post('/api/change-password',auth,async(req,res)=>{
 });
 
 app.get('/api/settings',auth,async(_req,res)=>{const r=await q('SELECT key,value FROM settings');res.json(Object.fromEntries(r.rows.map(x=>[x.key,x.value])))});
-app.put('/api/settings',auth,async(req,res)=>{for(const [k,v] of Object.entries(req.body||{})){if(['store_name','brand_name','currency','theme'].includes(k))await q('INSERT INTO settings(key,value) VALUES($1,$2) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value',[k,String(v)])}res.json({ok:true})});
+app.put('/api/settings',auth,async(req,res)=>{for(const [k,v] of Object.entries(req.body||{})){if(['store_name','brand_name','currency','theme','store_tagline','store_phone','store_instagram','shipping_fee'].includes(k))await q('INSERT INTO settings(key,value) VALUES($1,$2) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value',[k,String(v)])}res.json({ok:true})});
 
 app.get('/api/store/settings',async(_req,res)=>{
   const r=await q("SELECT key,value FROM settings WHERE key=ANY($1)",[['store_name','store_tagline','store_phone','store_instagram','currency','shipping_fee']]);
@@ -218,7 +218,7 @@ app.post('/api/products',auth,async(req,res)=>{
   const client=await pool.connect();
   try{
     await client.query('BEGIN');
-    const b=req.body, p=await client.query('INSERT INTO products(sku,name,category_id,buy_price,sell_price,image_url) VALUES($1,$2,$3,$4,$5,$6) RETURNING *',[clean(b.sku),clean(b.name),b.category_id||null,money(b.buy_price),money(b.sell_price),clean(b.image_url)||null]);
+    const b=req.body, p=await client.query('INSERT INTO products(sku,name,category_id,buy_price,sell_price,image_url,description,featured,is_new,compare_price,storefront) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *',[clean(b.sku),clean(b.name),b.category_id||null,money(b.buy_price),money(b.sell_price),clean(b.image_url)||null,clean(b.description)||null,Boolean(b.featured),b.is_new===false?false:true,b.compare_price?money(b.compare_price):null,b.storefront===false?false:true]);
     const vars=Array.isArray(b.variants)&&b.variants.length?b.variants:[{color:'عمومی',size:'عمومی',stock:0,min_stock:2}];
     for(const v of vars){const x=await client.query('INSERT INTO product_variants(product_id,color,size,barcode,stock,min_stock) VALUES($1,$2,$3,$4,$5,$6) RETURNING id',[p.rows[0].id,clean(v.color)||'عمومی',clean(v.size)||'عمومی',clean(v.barcode)||null,Number(v.stock||0),Number(v.min_stock||2)]);if(Number(v.stock||0)!==0)await client.query('INSERT INTO stock_movements(variant_id,delta,reason,reference_type,reference_id) VALUES($1,$2,$3,$4,$5)',[x.rows[0].id,Number(v.stock||0),'موجودی اولیه','product',p.rows[0].id])}
     await client.query('COMMIT');res.status(201).json(p.rows[0]);
