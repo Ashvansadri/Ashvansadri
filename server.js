@@ -43,8 +43,16 @@ async function initDb(){
     'CREATE TABLE IF NOT EXISTS stock_movements (id SERIAL PRIMARY KEY,variant_id INTEGER NOT NULL REFERENCES product_variants(id) ON DELETE CASCADE,delta INTEGER NOT NULL,reason TEXT NOT NULL,reference_type TEXT,reference_id INTEGER,created_at TIMESTAMPTZ DEFAULT NOW());' +
     'CREATE TABLE IF NOT EXISTS content_tasks (id SERIAL PRIMARY KEY,product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,title TEXT NOT NULL,channel TEXT NOT NULL DEFAULT \'instagram\',status TEXT NOT NULL DEFAULT \'idea\',caption TEXT,publish_date DATE,created_at TIMESTAMPTZ DEFAULT NOW());' +
     'CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY,value TEXT NOT NULL);' +
-    'CREATE INDEX IF NOT EXISTS idx_invoice_date ON invoices(created_at);'
+    'CREATE TABLE IF NOT EXISTS online_orders (id SERIAL PRIMARY KEY,order_no TEXT UNIQUE NOT NULL,customer_name TEXT NOT NULL,phone TEXT NOT NULL,city TEXT,address TEXT NOT NULL,note TEXT,subtotal NUMERIC(14,0) NOT NULL DEFAULT 0,shipping NUMERIC(14,0) NOT NULL DEFAULT 0,total NUMERIC(14,0) NOT NULL DEFAULT 0,status TEXT NOT NULL DEFAULT \'new\',created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());' +
+    'CREATE TABLE IF NOT EXISTS online_order_items (id SERIAL PRIMARY KEY,order_id INTEGER NOT NULL REFERENCES online_orders(id) ON DELETE CASCADE,variant_id INTEGER REFERENCES product_variants(id),product_name TEXT NOT NULL,color TEXT,size TEXT,qty INTEGER NOT NULL,unit_price NUMERIC(14,0) NOT NULL,line_total NUMERIC(14,0) NOT NULL);' +
+    'CREATE INDEX IF NOT EXISTS idx_invoice_date ON invoices(created_at);' +
+    'CREATE INDEX IF NOT EXISTS idx_online_order_date ON online_orders(created_at);'
   );
+  await q("ALTER TABLE products ADD COLUMN IF NOT EXISTS description TEXT");
+  await q("ALTER TABLE products ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT FALSE");
+  await q("ALTER TABLE products ADD COLUMN IF NOT EXISTS is_new BOOLEAN NOT NULL DEFAULT TRUE");
+  await q("ALTER TABLE products ADD COLUMN IF NOT EXISTS compare_price NUMERIC(14,0)");
+  await q("ALTER TABLE products ADD COLUMN IF NOT EXISTS storefront BOOLEAN NOT NULL DEFAULT TRUE");
   const email=process.env.ADMIN_EMAIL || 'admin@salehi.local';
   const pass=process.env.ADMIN_PASSWORD || '';
   const found=await q('SELECT id FROM users WHERE email=$1',[email]);
@@ -54,7 +62,27 @@ async function initDb(){
     await q('INSERT INTO users(name,email,password_hash,role) VALUES($1,$2,$3,$4)',['مدیر فروشگاه',email,hash,'owner']);
   }
   await q("INSERT INTO settings(key,value) VALUES ('store_name',$1),('brand_name','Retail OS'),('currency','تومان'),('theme','luxury') ON CONFLICT(key) DO NOTHING",[process.env.STORE_NAME||'فروشگاه صالحی']);
-  for(const name of ['مانتو','شومیز','شلوار','ست','اکسسوری']) await q('INSERT INTO categories(name) VALUES($1) ON CONFLICT(name) DO NOTHING',[name]);
+  for(const name of ['مانتو','شومیز','شلوار','ست','اکسسوری','دخترانه','پسرانه','نوزادی']) await q('INSERT INTO categories(name) VALUES($1) ON CONFLICT(name) DO NOTHING',[name]);
+  await q("INSERT INTO settings(key,value) VALUES ('store_tagline','کالکشن‌های دوست‌داشتنی برای کوچولوها'),('store_phone',''),('store_instagram',''),('shipping_fee','0') ON CONFLICT(key) DO NOTHING");
+  const count=(await q('SELECT COUNT(*)::int n FROM products')).rows[0].n;
+  if(count===0){
+    const demos=[
+      ['DEMO-G01','پیراهن دخترانه رز','دخترانه',390000,690000,790000,'پیراهن لطیف و سبک با فرم آزاد، مناسب مهمانی و استفاده روزمره.',true,['صورتی','کرم'],['3-4','5-6','7-8']],
+      ['DEMO-G02','ست بلوز و دامن پریا','دخترانه',470000,820000,920000,'ست دو تکه کودک با ترکیب راحت و شیک، مناسب دورهمی و تولد.',true,['یاسی','سفید'],['4-5','6-7','8-9']],
+      ['DEMO-G03','هودی دخترانه پاستلی','دخترانه',350000,610000,null,'هودی نرم و راحت برای استایل روزمره کودک.',false,['آبی آسمانی','صورتی'],['5-6','7-8','9-10']],
+      ['DEMO-B01','ست تیشرت و شلوارک رایان','پسرانه',390000,720000,790000,'ست اسپرت سبک و راحت، مناسب بازی و استفاده روزانه.',true,['سبز زیتونی','سرمه‌ای'],['3-4','5-6','7-8']],
+      ['DEMO-B02','هودی پسرانه آریو','پسرانه',410000,740000,null,'هودی گرم و کاربردی با طراحی مینیمال.',false,['طوسی','آبی'],['5-6','7-8','9-10']],
+      ['DEMO-B03','شلوار جین کودک کلاسیک','پسرانه',330000,590000,650000,'جین انعطاف‌پذیر و راحت با برش کودکانه.',false,['آبی روشن','آبی تیره'],['4-5','6-7','8-9']],
+      ['DEMO-N01','سرهمی نوزادی ابر کوچولو','نوزادی',250000,460000,520000,'سرهمی نخی لطیف با دوخت نرم و مناسب پوست حساس نوزاد.',true,['سفید','شیری'],['0-3M','3-6M','6-9M']],
+      ['DEMO-N02','ست خواب نوزادی ماه','نوزادی',280000,510000,null,'ست خواب سبک و تنفس‌پذیر برای آرامش بیشتر نوزاد.',false,['کرم','سبز نعنایی'],['0-3M','3-6M','6-9M']],
+      ['DEMO-N03','ست سه‌تکه نوزادی نیلا','نوزادی',320000,580000,640000,'ست کاربردی سه‌تکه برای هدیه و استفاده روزانه.',true,['هلویی','سفید'],['0-3M','3-6M','6-9M']]
+    ];
+    for(const d of demos){
+      const cat=(await q('SELECT id FROM categories WHERE name=$1',[d[2]])).rows[0];
+      const p=(await q('INSERT INTO products(sku,name,category_id,buy_price,sell_price,compare_price,description,featured,is_new,storefront) VALUES($1,$2,$3,$4,$5,$6,$7,$8,TRUE,TRUE) RETURNING id',[d[0],d[1],cat?.id||null,d[3],d[4],d[5],d[6],d[7]])).rows[0];
+      for(const color of d[8]) for(const size of d[9]) await q('INSERT INTO product_variants(product_id,color,size,stock,min_stock) VALUES($1,$2,$3,$4,$5)',[p.id,color,size,6,2]);
+    }
+  }
 }
 function auth(req,res,next){
   try{
@@ -64,6 +92,7 @@ function auth(req,res,next){
   }catch{ return res.status(401).json({error:'نشست منقضی شده است'}); }
 }
 const invoiceNo=()=> 'S-'+new Date().toISOString().slice(0,10).replaceAll('-','')+'-'+String(Date.now()).slice(-6);
+const onlineOrderNo=()=> 'ON-'+new Date().toISOString().slice(2,10).replaceAll('-','')+'-'+String(Date.now()).slice(-5);
 
 app.get('/api/health',async(_req,res)=>{
   if(!HAS_DB) return res.status(503).json({ok:false,service:'salehi-retail-os',mode:'preview',error:'database_not_configured'});
@@ -90,6 +119,83 @@ app.post('/api/change-password',auth,async(req,res)=>{
 
 app.get('/api/settings',auth,async(_req,res)=>{const r=await q('SELECT key,value FROM settings');res.json(Object.fromEntries(r.rows.map(x=>[x.key,x.value])))});
 app.put('/api/settings',auth,async(req,res)=>{for(const [k,v] of Object.entries(req.body||{})){if(['store_name','brand_name','currency','theme'].includes(k))await q('INSERT INTO settings(key,value) VALUES($1,$2) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value',[k,String(v)])}res.json({ok:true})});
+
+app.get('/api/store/settings',async(_req,res)=>{
+  const r=await q("SELECT key,value FROM settings WHERE key=ANY($1)",[['store_name','store_tagline','store_phone','store_instagram','currency','shipping_fee']]);
+  res.json(Object.fromEntries(r.rows.map(x=>[x.key,x.value])));
+});
+app.get('/api/store/products',async(req,res)=>{
+  const term=clean(req.query.q||''),cat=clean(req.query.category||'');
+  const r=await q(`SELECT p.id,p.sku,p.name,p.sell_price,p.compare_price,p.description,p.featured,p.is_new,c.name category_name,
+    COALESCE(json_agg(json_build_object('id',pv.id,'color',pv.color,'size',pv.size,'stock',pv.stock) ORDER BY pv.id) FILTER(WHERE pv.id IS NOT NULL),'[]') variants
+    FROM products p LEFT JOIN categories c ON c.id=p.category_id LEFT JOIN product_variants pv ON pv.product_id=p.id
+    WHERE p.active AND p.storefront AND ($1='' OR p.name ILIKE '%'||$1||'%' OR p.sku ILIKE '%'||$1||'%') AND ($2='' OR c.name=$2)
+    GROUP BY p.id,c.name ORDER BY p.featured DESC,p.is_new DESC,p.created_at DESC`,[term,cat]);
+  res.json(r.rows);
+});
+app.get('/api/store/products/:id',async(req,res)=>{
+  const r=await q(`SELECT p.id,p.sku,p.name,p.sell_price,p.compare_price,p.description,p.featured,p.is_new,c.name category_name,
+    COALESCE(json_agg(json_build_object('id',pv.id,'color',pv.color,'size',pv.size,'stock',pv.stock) ORDER BY pv.id) FILTER(WHERE pv.id IS NOT NULL),'[]') variants
+    FROM products p LEFT JOIN categories c ON c.id=p.category_id LEFT JOIN product_variants pv ON pv.product_id=p.id
+    WHERE p.id=$1 AND p.active AND p.storefront GROUP BY p.id,c.name`,[req.params.id]);
+  if(!r.rowCount)return res.status(404).json({error:'محصول پیدا نشد'});
+  res.json(r.rows[0]);
+});
+app.post('/api/store/orders',async(req,res)=>{
+  const b=req.body||{},items=Array.isArray(b.items)?b.items:[];
+  if(!clean(b.customer_name)||!clean(b.phone)||!clean(b.address)||!items.length)return res.status(400).json({error:'نام، موبایل، آدرس و سبد خرید الزامی است'});
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');let subtotal=0;const ready=[];
+    for(const item of items){
+      const rr=await client.query('SELECT pv.id,pv.stock,pv.color,pv.size,p.name,p.sell_price FROM product_variants pv JOIN products p ON p.id=pv.product_id WHERE pv.id=$1 AND p.active AND p.storefront FOR UPDATE',[item.variant_id]);
+      if(!rr.rowCount)throw new Error('یکی از محصولات دیگر در دسترس نیست');
+      const x=rr.rows[0],qty=Math.max(1,Number(item.qty||1));
+      if(x.stock<qty)throw new Error('موجودی '+x.name+' کافی نیست');
+      subtotal+=money(x.sell_price)*qty;ready.push({x,qty});
+    }
+    const sf=(await client.query("SELECT value FROM settings WHERE key='shipping_fee'")).rows[0]?.value||'0';
+    const shipping=Math.max(0,money(sf)),total=subtotal+shipping,no=onlineOrderNo();
+    const or=(await client.query('INSERT INTO online_orders(order_no,customer_name,phone,city,address,note,subtotal,shipping,total) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *',[no,clean(b.customer_name),clean(b.phone),clean(b.city)||null,clean(b.address),clean(b.note)||null,subtotal,shipping,total])).rows[0];
+    for(const it of ready){
+      await client.query('INSERT INTO online_order_items(order_id,variant_id,product_name,color,size,qty,unit_price,line_total) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[or.id,it.x.id,it.x.name,it.x.color,it.x.size,it.qty,it.x.sell_price,money(it.x.sell_price)*it.qty]);
+      await client.query('UPDATE product_variants SET stock=stock-$1 WHERE id=$2',[it.qty,it.x.id]);
+      await client.query('INSERT INTO stock_movements(variant_id,delta,reason,reference_type,reference_id) VALUES($1,$2,$3,$4,$5)',[it.x.id,-it.qty,'رزرو سفارش آنلاین','online_order',or.id]);
+    }
+    await client.query('COMMIT');res.status(201).json({ok:true,order_no:no,total,status:'new'});
+  }catch(e){await client.query('ROLLBACK');res.status(400).json({error:e.message})}finally{client.release()}
+});
+app.post('/api/store/track',async(req,res)=>{
+  const r=await q('SELECT order_no,customer_name,total,status,created_at,updated_at FROM online_orders WHERE order_no=$1 AND phone=$2',[clean(req.body.order_no||''),clean(req.body.phone||'')]);
+  if(!r.rowCount)return res.status(404).json({error:'سفارشی با این مشخصات پیدا نشد'});
+  res.json(r.rows[0]);
+});
+
+app.get('/api/online-orders',auth,async(_req,res)=>{
+  const r=await q(`SELECT o.*,COALESCE(json_agg(json_build_object('id',oi.id,'product_name',oi.product_name,'color',oi.color,'size',oi.size,'qty',oi.qty,'unit_price',oi.unit_price,'line_total',oi.line_total) ORDER BY oi.id) FILTER(WHERE oi.id IS NOT NULL),'[]') items
+  FROM online_orders o LEFT JOIN online_order_items oi ON oi.order_id=o.id GROUP BY o.id ORDER BY o.created_at DESC LIMIT 300`);
+  res.json(r.rows);
+});
+app.patch('/api/online-orders/:id/status',auth,async(req,res)=>{
+  const allowed=['new','confirmed','preparing','shipped','delivered','canceled'],next=clean(req.body.status||'');
+  if(!allowed.includes(next))return res.status(400).json({error:'وضعیت نامعتبر است'});
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const cur=(await client.query('SELECT * FROM online_orders WHERE id=$1 FOR UPDATE',[req.params.id])).rows[0];
+    if(!cur)throw new Error('سفارش پیدا نشد');
+    if(cur.status!=='canceled' && next==='canceled'){
+      const items=(await client.query('SELECT variant_id,qty FROM online_order_items WHERE order_id=$1',[cur.id])).rows;
+      for(const it of items)if(it.variant_id){await client.query('UPDATE product_variants SET stock=stock+$1 WHERE id=$2',[it.qty,it.variant_id]);await client.query('INSERT INTO stock_movements(variant_id,delta,reason,reference_type,reference_id) VALUES($1,$2,$3,$4,$5)',[it.variant_id,it.qty,'لغو سفارش آنلاین','online_order',cur.id])}
+    }
+    if(cur.status==='canceled' && next!=='canceled'){
+      const items=(await client.query('SELECT oi.variant_id,oi.qty,pv.stock FROM online_order_items oi JOIN product_variants pv ON pv.id=oi.variant_id WHERE oi.order_id=$1 FOR UPDATE',[cur.id])).rows;
+      for(const it of items){if(it.stock<it.qty)throw new Error('موجودی برای بازگردانی سفارش کافی نیست');await client.query('UPDATE product_variants SET stock=stock-$1 WHERE id=$2',[it.qty,it.variant_id]);await client.query('INSERT INTO stock_movements(variant_id,delta,reason,reference_type,reference_id) VALUES($1,$2,$3,$4,$5)',[it.variant_id,-it.qty,'فعال‌سازی مجدد سفارش آنلاین','online_order',cur.id])}
+    }
+    const out=(await client.query('UPDATE online_orders SET status=$1,updated_at=NOW() WHERE id=$2 RETURNING *',[next,cur.id])).rows[0];
+    await client.query('COMMIT');res.json(out);
+  }catch(e){await client.query('ROLLBACK');res.status(400).json({error:e.message})}finally{client.release()}
+});
 
 app.get('/api/dashboard',auth,async(_req,res)=>{
   const today=(await q("SELECT COALESCE(SUM(net_total),0) sales,COUNT(*) orders FROM invoices WHERE created_at::date=CURRENT_DATE")).rows[0];
@@ -171,6 +277,7 @@ app.post('/api/content/generate',auth,async(req,res)=>{
   res.json({caption:'✨ '+x.name+'\\n'+(x.category_name||'پوشاک')+(x.colors?' | رنگ‌ها: '+x.colors:'')+'\\nقیمت: '+price+' تومان\\nبرای موجودی سایز و ثبت سفارش پیام بدهید.\\n\\n#استایل #پوشاک #فروشگاه',story:x.name+'\\nانتخاب امروز ✨\\n'+price+' تومان\\nبرای سایز و رنگ موجود، دایرکت.',reel:'نمای نزدیک از بافت و جزئیات '+x.name+' → کات سریع به نمای کامل → نمایش رنگ‌های موجود → پایان با قیمت و دعوت به دایرکت.'});
 });
 
+app.get(['/store','/shop'],(_req,res)=>res.sendFile(path.join(__dirname,'public','store.html')));
 app.use(express.static(path.join(__dirname,'public')));
 app.use((req,res,next)=>{if(req.path.startsWith('/api/'))return next();res.sendFile(path.join(__dirname,'public','index.html'))});
 app.use((err,_req,res,_next)=>{console.error(err);res.status(500).json({error:'خطای داخلی سیستم'})});
