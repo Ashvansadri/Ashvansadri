@@ -6,12 +6,13 @@ import bcrypt from 'bcryptjs';
 import pg from 'pg';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import crypto from 'crypto';
 
 const { Pool } = pg;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = Number(process.env.PORT || 10000);
-const SECRET = process.env.JWT_SECRET || 'change-me';
+const SECRET = process.env.JWT_SECRET || crypto.randomBytes(48).toString('hex');
 if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.PGSSL === 'true' ? {rejectUnauthorized:false} : false });
 const q = (sql, params=[]) => pool.query(sql, params);
@@ -70,6 +71,15 @@ app.post('/api/login',async(req,res)=>{
 });
 app.post('/api/logout',(_req,res)=>{res.clearCookie('auth');res.json({ok:true})});
 app.get('/api/me',auth,(req,res)=>res.json({user:req.user}));
+app.post('/api/change-password',auth,async(req,res)=>{
+  const current=String(req.body.current_password||''), next=String(req.body.new_password||'');
+  if(next.length<10) return res.status(400).json({error:'رمز جدید باید حداقل ۱۰ کاراکتر باشد'});
+  const r=await q('SELECT password_hash FROM users WHERE id=$1',[req.user.id]);
+  if(!r.rowCount || !(await bcrypt.compare(current,r.rows[0].password_hash))) return res.status(400).json({error:'رمز فعلی صحیح نیست'});
+  const hash=await bcrypt.hash(next,12);
+  await q('UPDATE users SET password_hash=$1 WHERE id=$2',[hash,req.user.id]);
+  res.json({ok:true});
+});
 
 app.get('/api/settings',auth,async(_req,res)=>{const r=await q('SELECT key,value FROM settings');res.json(Object.fromEntries(r.rows.map(x=>[x.key,x.value])))});
 app.put('/api/settings',auth,async(req,res)=>{for(const [k,v] of Object.entries(req.body||{})){if(['store_name','brand_name','currency','theme'].includes(k))await q('INSERT INTO settings(key,value) VALUES($1,$2) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value',[k,String(v)])}res.json({ok:true})});
