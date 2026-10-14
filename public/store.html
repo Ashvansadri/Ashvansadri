@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f8f2e9">
+<title>فروشگاه صالحی | Kids Collection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/store.css">
+</head>
+<body>
+<div class="bg-orb o1"></div><div class="bg-orb o2"></div>
+<header class="shop-header">
+  <a class="shop-brand" href="/store"><span class="logo3d">S</span><span><b id="storeName">فروشگاه صالحی</b><small>Kids & Family Boutique</small></span></a>
+  <nav><a href="#new">جدیدها</a><a href="#collections">کالکشن‌ها</a><a href="#about">درباره ما</a></nav>
+  <div class="header-actions">
+    <button class="ghost" id="trackBtn">پیگیری سفارش</button>
+    <button class="cart-btn" id="cartBtn">سبد خرید <span id="cartCount">۰</span></button>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div class="hero-copy">
+    <span class="eyebrow">SALEHI KIDS COLLECTION</span>
+    <h1>لباس‌هایی برای<br><em>خاطره‌های کوچکِ بزرگ</em></h1>
+    <p id="tagline">کالکشن‌های دوست‌داشتنی برای کوچولوها؛ با انتخاب سایز و رنگ، مستقیم سفارش بده.</p>
+    <div class="hero-actions"><a class="primary" href="#new">مشاهده کالکشن</a><button class="secondary" id="heroTrack">پیگیری سفارش</button></div>
+    <div class="hero-badges"><span>✓ انتخاب رنگ و سایز</span><span>✓ سفارش آنلاین</span><span>✓ موجودی لحظه‌ای</span></div>
+  </div>
+  <div class="showcase3d" aria-hidden="true">
+    <div class="halo h1"></div><div class="halo h2"></div>
+    <div class="pedestal p1"></div><div class="pedestal p2"></div><div class="pedestal p3"></div>
+    <div class="outfit dress-a"><span class="hanger"></span><span class="body"></span><span class="skirt"></span></div>
+    <div class="outfit set-b"><span class="hanger"></span><span class="body"></span><span class="legs"></span></div>
+    <div class="outfit baby-c"><span class="hanger"></span><span class="body"></span><span class="snap"></span></div>
+    <div class="spark s1">✦</div><div class="spark s2">✦</div><div class="spark s3">✦</div>
+  </div>
+</section>
+
+<section class="trust-strip">
+  <div><b>انتخاب هوشمند</b><small>رنگ و سایز موجود</small></div>
+  <div><b>سبد سریع</b><small>سفارش بدون دردسر</small></div>
+  <div><b>پیگیری ساده</b><small>با کد سفارش و موبایل</small></div>
+  <div><b>ویترین زنده</b><small>متصل به موجودی فروشگاه</small></div>
+</section>
+
+<section class="collections" id="collections">
+  <div class="section-head"><div><span class="eyebrow">COLLECTIONS</span><h2>برای هر سن و هر حال‌و‌هوا</h2></div></div>
+  <div class="collection-grid">
+    <button class="collection-card pink" data-category="دخترانه"><span class="mini-art dress"></span><b>دخترانه</b><small>لطیف، رنگی، دوست‌داشتنی</small></button>
+    <button class="collection-card blue" data-category="پسرانه"><span class="mini-art tee"></span><b>پسرانه</b><small>راحت، اسپرت، روزمره</small></button>
+    <button class="collection-card mint" data-category="نوزادی"><span class="mini-art onesie"></span><b>نوزادی</b><small>نرم، سبک، مناسب پوست حساس</small></button>
+  </div>
+</section>
+
+<section class="products-section" id="new">
+  <div class="section-head products-head">
+    <div><span class="eyebrow">NEW & FEATURED</span><h2>انتخاب‌های این هفته</h2></div>
+    <div class="filters"><input id="search" placeholder="جستجوی محصول..."><button class="filter active" data-cat="">همه</button><button class="filter" data-cat="دخترانه">دخترانه</button><button class="filter" data-cat="پسرانه">پسرانه</button><button class="filter" data-cat="نوزادی">نوزادی</button></div>
+  </div>
+  <div id="productGrid" class="product-grid"><div class="loading">در حال آماده‌سازی ویترین…</div></div>
+</section>
+
+<section class="story" id="about">
+  <div class="story-card">
+    <div class="story-copy"><span class="eyebrow">A SMALL BOUTIQUE, A SMART EXPERIENCE</span><h2>از ویترین تا سفارش؛ همه‌چیز یکپارچه</h2><p>این فروشگاه نمونه، مستقیم به سیستم مدیریت متصل است؛ موجودی، سفارش آنلاین و پیگیری مشتری در یک جریان واحد انجام می‌شود.</p><a href="#new" class="secondary inline">دیدن محصولات</a></div>
+    <div class="story-visual"><div class="bag3d">S<span>Kids</span></div><div class="bubble b1"></div><div class="bubble b2"></div></div>
+  </div>
+</section>
+</main>
+
+<footer><div><b id="footerName">فروشگاه صالحی</b><p>ویترین آزمایشی هوشمند فروش پوشاک</p></div><div class="footer-note">Powered by Roshanfekran AI Retail OS</div></footer>
+
+<div id="productModal" class="overlay hidden"></div>
+<div id="trackModal" class="overlay hidden"></div>
+<aside id="cartDrawer" class="cart-drawer">
+  <div class="cart-head"><div><span class="eyebrow">YOUR BAG</span><h3>سبد خرید</h3></div><button class="close" id="closeCart">×</button></div>
+  <div id="cartItems" class="cart-items"></div>
+  <div class="cart-summary"><div><span>جمع محصولات</span><b id="cartSubtotal">۰ تومان</b></div><div><span>ارسال</span><b id="shippingText">رایگان</b></div><div class="grand"><span>مبلغ سفارش</span><b id="cartTotal">۰ تومان</b></div><button id="checkoutBtn" class="primary full">ادامه و ثبت سفارش</button></div>
+</aside>
+<div id="scrim" class="scrim"></div>
+<div id="toast" class="shop-toast"></div>
+<script src="/store.js"></script>
+</body></html>
