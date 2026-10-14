@@ -83,6 +83,18 @@ async function initDb(){
       for(const color of d[8]) for(const size of d[9]) await q('INSERT INTO product_variants(product_id,color,size,stock,min_stock) VALUES($1,$2,$3,$4,$5)',[p.id,color,size,6,2]);
     }
   }
+  const demoImages={
+    'DEMO-G01':'https://images.pexels.com/photos/27112918/pexels-photo-27112918/free-photo-of-a-white-tulle-dress-for-a-little-girl-hanging-on-a-closet-door.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'DEMO-G02':'https://images.pexels.com/photos/11689092/pexels-photo-11689092.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'DEMO-G03':'https://images.pexels.com/photos/7988711/pexels-photo-7988711.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'DEMO-B01':'https://images.pexels.com/photos/13758357/pexels-photo-13758357.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'DEMO-B02':'https://images.pexels.com/photos/3889812/pexels-photo-3889812.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'DEMO-B03':'https://images.pexels.com/photos/28259750/pexels-photo-28259750.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'DEMO-N01':'https://images.pexels.com/photos/16681603/pexels-photo-16681603/free-photo-of-close-up-of-baby-clothes-in-neutral-colors.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'DEMO-N02':'https://images.pexels.com/photos/3932934/pexels-photo-3932934.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'DEMO-N03':'https://images.pexels.com/photos/4858394/pexels-photo-4858394.jpeg?auto=compress&cs=tinysrgb&w=1200'
+  };
+  for(const [sku,url] of Object.entries(demoImages)) await q('UPDATE products SET image_url=$1 WHERE sku=$2',[url,sku]);
 }
 function auth(req,res,next){
   try{
@@ -126,7 +138,7 @@ app.get('/api/store/settings',async(_req,res)=>{
 });
 app.get('/api/store/products',async(req,res)=>{
   const term=clean(req.query.q||''),cat=clean(req.query.category||'');
-  const r=await q(`SELECT p.id,p.sku,p.name,p.sell_price,p.compare_price,p.description,p.featured,p.is_new,c.name category_name,
+  const r=await q(`SELECT p.id,p.sku,p.name,p.sell_price,p.compare_price,p.description,p.featured,p.is_new,p.image_url,c.name category_name,
     COALESCE(json_agg(json_build_object('id',pv.id,'color',pv.color,'size',pv.size,'stock',pv.stock) ORDER BY pv.id) FILTER(WHERE pv.id IS NOT NULL),'[]') variants
     FROM products p LEFT JOIN categories c ON c.id=p.category_id LEFT JOIN product_variants pv ON pv.product_id=p.id
     WHERE p.active AND p.storefront AND ($1='' OR p.name ILIKE '%'||$1||'%' OR p.sku ILIKE '%'||$1||'%') AND ($2='' OR c.name=$2)
@@ -134,7 +146,7 @@ app.get('/api/store/products',async(req,res)=>{
   res.json(r.rows);
 });
 app.get('/api/store/products/:id',async(req,res)=>{
-  const r=await q(`SELECT p.id,p.sku,p.name,p.sell_price,p.compare_price,p.description,p.featured,p.is_new,c.name category_name,
+  const r=await q(`SELECT p.id,p.sku,p.name,p.sell_price,p.compare_price,p.description,p.featured,p.is_new,p.image_url,c.name category_name,
     COALESCE(json_agg(json_build_object('id',pv.id,'color',pv.color,'size',pv.size,'stock',pv.stock) ORDER BY pv.id) FILTER(WHERE pv.id IS NOT NULL),'[]') variants
     FROM products p LEFT JOIN categories c ON c.id=p.category_id LEFT JOIN product_variants pv ON pv.product_id=p.id
     WHERE p.id=$1 AND p.active AND p.storefront GROUP BY p.id,c.name`,[req.params.id]);
