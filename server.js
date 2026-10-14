@@ -13,9 +13,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = Number(process.env.PORT || 10000);
 const SECRET = process.env.JWT_SECRET || crypto.randomBytes(48).toString('hex');
-if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
-const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.PGSSL === 'true' ? {rejectUnauthorized:false} : false });
-const q = (sql, params=[]) => pool.query(sql, params);
+const HAS_DB = Boolean(process.env.DATABASE_URL);
+const pool = HAS_DB ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.PGSSL === 'true' ? {rejectUnauthorized:false} : false }) : null;
+const q = (sql, params=[]) => {
+  if(!pool) throw new Error('DATABASE_URL is required');
+  return pool.query(sql, params);
+};
 const money = v => Number(v || 0);
 const clean = v => typeof v === 'string' ? v.trim() : v;
 
@@ -61,7 +64,10 @@ function auth(req,res,next){
 }
 const invoiceNo=()=> 'S-'+new Date().toISOString().slice(0,10).replaceAll('-','')+'-'+String(Date.now()).slice(-6);
 
-app.get('/api/health',async(_req,res)=>{try{await q('SELECT 1');res.json({ok:true,service:'salehi-retail-os'})}catch(e){res.status(500).json({ok:false,error:e.message})}});
+app.get('/api/health',async(_req,res)=>{
+  if(!HAS_DB) return res.status(503).json({ok:false,service:'salehi-retail-os',mode:'preview',error:'database_not_configured'});
+  try{await q('SELECT 1');res.json({ok:true,service:'salehi-retail-os',mode:'live'})}catch(e){res.status(500).json({ok:false,error:e.message})}
+});
 app.post('/api/login',async(req,res)=>{
   const r=await q('SELECT * FROM users WHERE email=$1',[clean(req.body.email||'')]);
   if(!r.rowCount || !(await bcrypt.compare(req.body.password||'',r.rows[0].password_hash))) return res.status(401).json({error:'ایمیل یا رمز عبور اشتباه است'});
@@ -167,4 +173,10 @@ app.post('/api/content/generate',auth,async(req,res)=>{
 app.use(express.static(path.join(__dirname,'public')));
 app.use((req,res,next)=>{if(req.path.startsWith('/api/'))return next();res.sendFile(path.join(__dirname,'public','index.html'))});
 app.use((err,_req,res,_next)=>{console.error(err);res.status(500).json({error:'خطای داخلی سیستم'})});
-initDb().then(()=>app.listen(PORT,'0.0.0.0',()=>console.log('Retail OS on '+PORT))).catch(e=>{console.error(e);process.exit(1)});
+(async()=>{
+  try{
+    if(HAS_DB) await initDb();
+    else console.warn('Retail OS starting in preview mode: DATABASE_URL is not configured');
+    app.listen(PORT,'0.0.0.0',()=>console.log('Retail OS on '+PORT+(HAS_DB?' [live]':' [preview]')));
+  }catch(e){console.error(e);process.exit(1)}
+})();
