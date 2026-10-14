@@ -46,9 +46,10 @@ async function initDb(){
     'CREATE INDEX IF NOT EXISTS idx_invoice_date ON invoices(created_at);'
   );
   const email=process.env.ADMIN_EMAIL || 'admin@salehi.local';
-  const pass=process.env.ADMIN_PASSWORD || 'ChangeMe123!';
+  const pass=process.env.ADMIN_PASSWORD || '';
   const found=await q('SELECT id FROM users WHERE email=$1',[email]);
   if(!found.rowCount){
+    if(pass.length < 10) throw new Error('ADMIN_PASSWORD must be set and at least 10 characters for first setup');
     const hash=await bcrypt.hash(pass,12);
     await q('INSERT INTO users(name,email,password_hash,role) VALUES($1,$2,$3,$4)',['مدیر فروشگاه',email,hash,'owner']);
   }
