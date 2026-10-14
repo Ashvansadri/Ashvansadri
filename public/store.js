@@ -21,6 +21,9 @@ function palette(p){
   const a=maps[kind(p)],i=Number(p.id||0)%a.length;return a[i]
 }
 function art(p,large=false){
+  if(p&&p.image_url){
+    return '<img class="'+(large?'detail-photo':'real-product-img')+'" src="'+esc(p.image_url)+'" alt="'+esc(p.name||'محصول')+'" loading="'+(large?'eager':'lazy')+'" referrerpolicy="no-referrer">';
+  }
   const [c1,c2]=palette(p),cls=kind(p)==='girl'?'dress':kind(p)==='boy'?'set':'onesie';
   return '<div class="vector-outfit '+cls+'" style="--c1:'+c1+';--c2:'+c2+(large?';transform:scale(1.35)':'')+'"><span class="top"></span><span class="bottom"></span></div>';
 }
@@ -115,13 +118,36 @@ function trackOrder(){
   }
 }
 
+function initHeroParallax(){
+  const stage=$('#heroStage'); if(!stage||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const layers=[...stage.querySelectorAll('.parallax-layer')];
+  let targetX=0,targetY=0,currentX=0,currentY=0,raf=0;
+  function animate(){
+    currentX+=(targetX-currentX)*.085; currentY+=(targetY-currentY)*.085;
+    stage.style.transform='perspective(1500px) rotateX('+(-currentY*2.2)+'deg) rotateY('+(currentX*3.2)+'deg)';
+    layers.forEach(el=>{
+      const d=Number(el.dataset.depth||20),base=el.dataset.baseTransform||getComputedStyle(el).transform;
+      if(!el.dataset.baseTransform)el.dataset.baseTransform=base==='none'?'':base;
+      const dx=currentX*d*.42,dy=currentY*d*.32;
+      el.style.translate=dx+'px '+dy+'px';
+    });
+    raf=requestAnimationFrame(animate);
+  }
+  const move=e=>{
+    const r=stage.getBoundingClientRect();
+    targetX=((e.clientX-r.left)/r.width-.5)*2;
+    targetY=((e.clientY-r.top)/r.height-.5)*2;
+  };
+  const leave=()=>{targetX=0;targetY=0};
+  stage.addEventListener('pointermove',move);stage.addEventListener('pointerleave',leave);animate();
+}
 async function init(){
   try{
     settings=await api('/api/store/settings');
     $('#storeName').textContent=settings.store_name||'فروشگاه صالحی';$('#footerName').textContent=settings.store_name||'فروشگاه صالحی';
     if(settings.store_tagline)$('#tagline').textContent=settings.store_tagline;
     products=await api('/api/store/products');
-    renderProducts();drawCart()
+    renderProducts();drawCart();initHeroParallax()
   }catch(e){$('#productGrid').innerHTML='<div class="empty">'+esc(e.message)+'</div>'}
 }
 $('#cartBtn').onclick=openCart;$('#closeCart').onclick=closeCart;$('#scrim').onclick=closeCart;$('#checkoutBtn').onclick=checkout;$('#trackBtn').onclick=trackOrder;$('#heroTrack').onclick=trackOrder;
