@@ -1,9 +1,33 @@
 'use strict';
+import { createClient } from '@neondatabase/neon-js';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const e=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const statuses={new:'ثبت‌شده',review:'در حال بررسی',measurement:'نیاز به اندازه‌گیری',pattern:'تهیه الگو',consultation:'هماهنگی',sewing:'در حال دوخت',complete:'تکمیل‌شده',cancelled:'لغوشده'};
 function toast(s){let b=$('#toast');b.style.display='block';b.textContent=s;setTimeout(()=>b.style.display='none',4400)}
-async function api(path,body=null){let opts=body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{};const r=await fetch(path,opts);let x=await r.json();if(!r.ok)throw Error(x.error||'خطای سرور');return x}
+const rzDb=createClient({auth:{url:'https://ep-curly-pond-b4035gvb.neonauth.c-6.us-east-2.aws.neon.tech/neondb/auth',allowAnonymous:true},dataApi:{url:'https://ep-curly-pond-b4035gvb.apirest.c-6.us-east-2.aws.neon.tech/neondb/rest/v1'}});
+async function api(path,body=null){
+ if(path==='/api/admin/login'){
+ const email=$('#email').value.trim(),password=body?.password||'';
+ const a=await rzDb.auth.signIn.email({email,password});
+ if(a.error)throw Error(a.error.message||'ورود ناموفق بود');
+ const {data,error}=await rzDb.rpc('rz_fit_is_admin',{});
+ if(error||!data){await rzDb.auth.signOut();throw Error('این حساب، دسترسی مدیریت مزون ندارد.')}
+ return {ok:true};
+ }
+ if(path==='/api/admin/logout'){await rzDb.auth.signOut();return {ok:true}}
+ const table={
+ '/api/admin/requests':['rz_fit_admin_requests',{}],
+ '/api/admin/garments':['rz_fit_admin_catalog',{}],
+ '/api/admin/status':['rz_fit_admin_status',{p_id:body?.id,p_status:body?.status,p_note:body?.admin_note||''}],
+ '/api/admin/toggle':['rz_fit_admin_toggle',{p_id:body?.id,p_active:body?.is_active===true}],
+ '/api/admin/new_garment':['rz_fit_admin_add',{p_data:body}]
+ };
+ const entry=table[path];
+ if(!entry)throw Error('مسیر مدیریت موجود نیست');
+ const {data,error}=await rzDb.rpc(entry[0],entry[1]);
+ if(error)throw Error(error.message||'دسترسی مدیریت لازم است');
+ return data;
+}
 function showDashboard(){ $('#loginBox').classList.add('hidden');$('#dashboard').classList.remove('hidden')}
 function showLogin(){ $('#loginBox').classList.remove('hidden');$('#dashboard').classList.add('hidden')}
 function opt(st){return Object.entries(statuses).map(([k,v])=>'<option value="'+k+'" '+(k===st?'selected':'')+'>'+v+'</option>').join('')}
@@ -19,5 +43,5 @@ $('#logout').onclick=async()=>{await api('/api/admin/logout',{});showLogin()};
 $('#refresh').onclick=loadRequests;
 $$('[data-tab]').forEach(b=>b.onclick=()=>{$$('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));$$('[data-pane]').forEach(x=>x.classList.toggle('hidden',x.dataset.pane!==b.dataset.tab));if(b.dataset.tab==='garments')loadGarments();else loadRequests()});
 async function compress(file){if(!file)throw Error('عکس لباس را انتخاب کنید.');if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>8*1024*1024)throw Error('عکس JPG/PNG/WEBP تا ۸ مگابایت قابل قبول است.');let url=URL.createObjectURL(file);try{let img=await new Promise((ok,fail)=>{let i=new Image();i.onload=()=>ok(i);i.onerror=()=>fail(Error('بارگذاری عکس ناموفق'));i.src=url});let c=document.createElement('canvas'),ratio=Math.min(1,1000/Math.max(img.width,img.height));c.width=Math.round(img.width*ratio);c.height=Math.round(img.height*ratio);c.getContext('2d').drawImage(img,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.73)}finally{URL.revokeObjectURL(url)}}
-$('#garmentForm').onsubmit=async ev=>{ev.preventDefault();let btn=$('#gSubmit');btn.disabled=true;try{let pic=await compress($('#gImage').files[0]);await api('/api/admin/garments',{title:$('#gTitle').value,category:$('#gCategory').value,description:$('#gDescription').value,image_data:pic,is_featured:$('#gFeatured').checked});toast('لباس به گالری اضافه شد');ev.target.reset();await loadGarments()}catch(er){toast(er.message)}finally{btn.disabled=false}};
+$('#garmentForm').onsubmit=async ev=>{ev.preventDefault();let btn=$('#gSubmit');btn.disabled=true;try{let pic=await compress($('#gImage').files[0]);await api('/api/admin/new_garment',{title:$('#gTitle').value,category:$('#gCategory').value,description:$('#gDescription').value,image_data:pic,is_featured:$('#gFeatured').checked});toast('لباس به گالری اضافه شد');ev.target.reset();await loadGarments()}catch(er){toast(er.message)}finally{btn.disabled=false}};
 loadRequests();
