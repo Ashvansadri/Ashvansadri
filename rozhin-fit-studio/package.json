@@ -1,0 +1,12 @@
+{
+  "name": "rozhin-ai-fit-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Independent Maison Rozhin client atelier",
+  "scripts": {
+    "start": "node server.cjs"
+  },
+  "dependencies": {
+    "pg": "^8.16.0"
+  }
+}
