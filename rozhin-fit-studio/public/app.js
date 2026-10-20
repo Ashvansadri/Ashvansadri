@@ -2,7 +2,7 @@
 import { createClient } from '@neondatabase/neon-js';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const state={items:[],filter:'all',selected:null,person:null,garment:null,uploadGarment:null,measurements:null,latestRef:null};
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;':'&quot;',"'":'&#39;'}[c]));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=new Intl.DateTimeFormat('fa-IR-u-ca-persian',{dateStyle:'long'});$('#today').textContent=fmt.format(new Date());
 function toast(s){const t=$('#toast');t.textContent=s;t.style.display='block';clearTimeout(window.rzToast);window.rzToast=setTimeout(()=>t.style.display='none',4800)}
 function validImg(u){return typeof u==='string'&&/^(data:image\/(svg\+xml|png|jpeg|webp);base64,|https:\/\/)/i.test(u)}
