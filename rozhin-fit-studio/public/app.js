@@ -1,5 +1,6 @@
 'use strict';
 import { createClient } from '@neondatabase/neon-js';
+import { Client, handle_file } from '@gradio/client';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const state={items:[],filter:'all',selected:null,person:null,garment:null,uploadGarment:null,measurements:null,latestRef:null};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -58,8 +59,31 @@ $('#clearPreview').onclick=()=>{state.person=null;state.garment=null;state.uploa
 function imgLoad(src){return new Promise((ok,fail)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>fail(Error('تصویر برای ذخیره خوانده نشد.'));im.crossOrigin='anonymous';im.src=src;})}
 function download(data,name,type){const blob=new Blob([data],{type}),a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),10000)}
 $('#savePreview').onclick=async()=>{if(!state.person||!state.garment)return toast('ابتدا عکس خودتان و تصویر لباس را اضافه کنید.');try{const [pers,cloth]=await Promise.all([imgLoad(state.person),imgLoad(state.garment)]);const canvas=document.createElement('canvas');canvas.width=900;canvas.height=1200;const c=canvas.getContext('2d');c.fillStyle='#251d1e';c.fillRect(0,0,900,1200);const sc=Math.min(900/pers.width,1200/pers.height),iw=pers.width*sc,ih=pers.height*sc;c.drawImage(pers,(900-iw)/2,(1200-ih)/2,iw,ih);const cw=900*Number($('#size').value)/100,ch=cw*cloth.height/cloth.width,x=900*Number($('#left').value)/100-cw/2,y=1200*Number($('#top').value)/100;c.globalAlpha=Number($('#alpha').value)/100;c.drawImage(cloth,x,y,cw,ch);c.globalAlpha=1;canvas.toBlob(b=>{if(!b)return toast('ذخیره ناموفق');const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='rozhin-visual-preview.png';a.click();setTimeout(()=>URL.revokeObjectURL(u),10000)},'image/png');}catch(e){toast(e.message)}};
-$('#realAI').onclick=()=>{if(!$('#aiConsent').checked)return toast('ابتدا شرایط ارسال عکس به سرویس بیرونی را بپذیرید.');window.open('https://huggingface.co/spaces/fashn-ai/fashn-vton-1.5','_blank','noopener,noreferrer');toast('سرویس رایگان باز شد؛ عکس شخص و لباس را داخل آن بارگذاری کنید.');};
-$('#requestType').onchange=e=>{if(e.target.value==='custom')$('#garmentFile').focus()};
+$('#realAI').onclick=async()=>{
+ if(!$('#aiConsent').checked)return toast('برای ارسال عکس به موتور هوش مصنوعی، رضایت پردازش را تأیید کنید.');
+ if(!state.person||!state.garment)return toast('اول عکس خودتان و عکس لباس را بارگذاری کنید.');
+ if(state.selected?.source==='inspiration')return toast('برای پرو فوتورئال باید عکس واقعی لباس را بارگذاری کنید؛ تصویرسازی ایده روز کافی نیست.');
+ const btn=$('#realAI'),out=$('#aiResponse');
+ btn.disabled=true;btn.textContent='درخواست در صف GPU رایگان...';
+ out.textContent='اتصال به سرویس هوش مصنوعی اشتراکی؛ احتمال صف یا محدودیت روزانه وجود دارد.';
+ try{
+  const [a,b]=await Promise.all([fetch(state.person).then(x=>x.blob()),fetch(state.garment).then(x=>x.blob())]);
+  const client=await Client.connect('fashn-ai/fashn-vton-1.5');
+  const cat=cardCategory(state.selected||{type:$('#patternType').value});
+  const category=['dress','manto'].includes(cat)?'one-pieces':['pants','skirt'].includes(cat)?'bottoms':'tops';
+  const payload={person_image:handle_file(a),garment_image:handle_file(b),category,garment_photo_type:'flat-lay',num_timesteps:30,guidance_scale:1.5,seed:42,segmentation_free:true};
+  let response;
+  try{response=await client.predict('/try_on',payload);}catch(e){
+   if(/api|endpoint|not found|invalid function/i.test(String(e?.message||'')))response=await client.predict('/predict',payload);
+   else throw e;
+  }
+  const raw=response?.data?.[0],url=typeof raw==='string'?raw:raw?.url||raw?.path;
+  if(!url||!/^https:\/\//i.test(url))throw Error('سرویس فایل تصویر قابل نمایش برنگرداند.');
+  out.innerHTML='<div class="success"><strong>پرو هوشمند آماده است</strong><img src="'+url.replace(/"/g,'%22')+'" alt="پرو هوشمند با FASHN" style="display:block;width:100%;max-height:580px;object-fit:contain;margin:12px auto;border-radius:6px"><a class="outline" href="'+url.replace(/"/g,'%22')+'" target="_blank" rel="noopener noreferrer">بازکردن و ذخیره تصویر خروجی ↗</a><p class="subtle">این تصویر تخمین بصری AI است؛ تناسب سایز و الگوی دوخت را اثبات نمی‌کند.</p></div>';
+  out.scrollIntoView({behavior:'smooth',block:'center'});
+ }catch(err){out.textContent='پرو هوشمند اجرا نشد: '+String(err?.message||'سهمیه رایگان یا دسترسی سرویس موجود نیست').slice(0,260)+' . از لینک اجرای مستقیم در بالا استفاده کنید.';toast('سرویس اشتراکی در دسترس نیست یا سهمیه آن تمام شده است.');}
+ finally{btn.disabled=false;btn.textContent='اجرای پرو واقعی آزمایشی روی عکس من ✦'}
+};
 function getMeasures(){const data=new FormData($('#measureForm')),out={};for(let k of ['waist','hip','length','hipDepth','bust','height','shoulders','sleeve','arm']){let s=data.get(k);out[k]=s?Number(s):null;}for(let k of ['type','fabric','fit'])out[k]=String(data.get(k)||'');return out}
 function validate(m){if(!m.waist||!m.hip||!m.length||!m.hipDepth)throw Error('چهار اندازه ستاره‌دار ضروری است.');if(m.hip<m.waist)throw new Error('دور باسن از دور کمر کمتر است؛ اندازه‌ها را بازبینی کنید.');if(m.hipDepth>=m.length)throw Error('فاصله کمر تا باسن باید از قد لباس کمتر باشد.');if(m.type==='skirt'&&m.fabric==='stretch')throw Error('برای دامن کشی، درصد کشسانی پارچه باید به‌صورت تخصصی اندازه‌گیری شود.')}
 function skirtSVG(m){
