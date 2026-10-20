@@ -1,4 +1,5 @@
 'use strict';
+import { createClient } from '@neondatabase/neon-js';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const state={items:[],filter:'all',selected:null,person:null,garment:null,uploadGarment:null,measurements:null,latestRef:null};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;':'&quot;',"'":'&#39;'}[c]));
@@ -7,7 +8,28 @@ function toast(s){const t=$('#toast');t.textContent=s;t.style.display='block';cl
 function validImg(u){return typeof u==='string'&&/^(data:image\/(svg\+xml|png|jpeg|webp);base64,|https:\/\/)/i.test(u)}
 function cardCategory(x){return ['evening','formal'].includes(x.category)?'dress':x.category||x.type||'dress'}
 function categoryTitle(x){return ({dress:'پیراهن',skirt:'دامن',manto:'مانتو',jacket:'کت',pants:'شلوار',top:'بلوز'})[cardCategory(x)]||'پوشاک'}
-async function api(path,options={}){const r=await fetch(path,{...options,headers:{'Content-Type':'application/json',...(options.headers||{})}});let d;try{d=await r.json()}catch{throw Error('ارتباط با سرور برقرار نشد.')}if(!r.ok)throw Error(d.error||'خطایی رخ داد');return d}
+const rzDb=createClient({auth:{url:'https://ep-curly-pond-b4035gvb.neonauth.c-6.us-east-2.aws.neon.tech/neondb/auth',allowAnonymous:true},dataApi:{url:'https://ep-curly-pond-b4035gvb.apirest.c-6.us-east-2.aws.neon.tech/neondb/rest/v1'}});
+const inspirations=[
+['پیراهن مجلسی ساتن','dress','#843d51'],['دامن میدی مینیمال','skirt','#806e60'],['مانتوی کتی مدرن','manto','#58655f'],['کت یقه کلاسیک','jacket','#47495d'],['پیراهن ماکسی زرشکی','dress','#722b42'],['شلوار راسته کرپ','pants','#555762'],['بلوز ابریشمی','top','#a98b78'],['دامن فون','skirt','#374c54'],['مانتوی سنگی','manto','#b3a08b'],['پیراهن شب زمردی','dress','#35695e'],['کت کوتاه مدرن','jacket','#6e5a6b'],['دامن کلوش','skirt','#8d5263'],['تونیک سبک مینیمال','top','#766b66'],['پیراهن بلند رسمی','dress','#4b4857'],['شلوار پارچه‌ای','pants','#917c69'],['مانتوی شهری','manto','#424e59']];
+function conceptSvg(kind,color){
+ const shapes={dress:'M99 67 L129 57 L151 68 L173 105 L153 128 L146 159 L181 274 Q121 302 62 274 L99 159 L90 130 L67 105Z',skirt:'M88 154 Q123 166 153 154 L174 276 Q123 296 66 276Z',manto:'M101 69 L131 58 L153 70 L180 123 L165 147 L146 123 L169 273 L71 273 L93 123 L75 147 L62 123Z',jacket:'M98 72 L131 57 L153 73 L175 122 L159 141 L149 118 L151 198 L92 198 L96 118 L78 141 L66 122Z',pants:'M92 147 L153 147 L169 272 L132 279 L121 190 L111 279 L76 272Z',top:'M99 70 L130 60 L153 70 L170 114 L152 126 L147 170 L96 170 L91 126 L75 114Z'};
+ const p=shapes[kind]||shapes.dress;
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 320"><defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="'+color+'"/><stop offset="1" stop-color="#291c23"/></linearGradient><radialGradient id="b"><stop stop-color="#413531"/><stop offset="1" stop-color="#171316"/></radialGradient></defs><rect width="240" height="320" fill="url(#b)"/><ellipse cx="120" cy="297" rx="73" ry="9" fill="#050507" opacity=".5"/><circle cx="120" cy="34" r="17" fill="#c8a89a"/><path d="M105 50 L107 72 L134 72 L136 50" fill="#c8a89a"/><path d="M117 69 L113 168 L105 282 M126 69 L130 168 L138 282" stroke="#9f7968" stroke-width="16" fill="none" opacity=".65"/><path d="'+p+'" fill="url(#g)" stroke="#d8b188" stroke-width="1.6"/><path d="M120 74 L121 150 M95 167 Q120 172 147 166" stroke="#e4bd90" opacity=".35" fill="none"/><text x="120" y="310" text-anchor="middle" font-size="10" fill="#d5b38d" letter-spacing="2">ROZHIN STUDIO</text></svg>';
+ return 'data:image/svg+xml;base64,'+btoa(svg);
+}
+function getDailyInspiration(){const ix=(Math.floor(Date.now()/86400000)*7)%inspirations.length;return [...inspirations.slice(ix),...inspirations.slice(0,ix)].slice(0,8).map((row,j)=>({id:'idea-'+((ix+j)%inspirations.length),title:row[0],category:row[1],type:row[1],source:'inspiration',image:conceptSvg(row[1],row[2]),is_demo:true,color:row[2]}))}
+async function api(path,options={}){
+let fn,params={};
+if(path==='/api/catalog'){fn='rz_fit_catalog';}
+else if(path==='/api/requests'){fn='rz_fit_submit';params={p_data:JSON.parse(options.body||'{}')};}
+else if(path.startsWith('/api/track?')){const q=new URLSearchParams(path.split('?')[1]);fn='rz_fit_track';params={p_ref:q.get('ref'),p_phone:q.get('phone')};}
+else throw Error('مسیر درخواست پشتیبانی نمی‌شود');
+try{const {data,error}=await rzDb.rpc(fn,params);if(error)throw error;
+if(data&&data.error)throw Error(data.error);
+if(fn==='rz_fit_catalog')return {...data,inspirations:getDailyInspiration()};
+return data;
+}catch(err){throw Error(err?.message||'خطا در ارتباط با سامانه');}
+}
 async function load(){try{const d=await api('/api/catalog');state.items=[...d.catalog.map(x=>({...x,source:'maison'})),...d.inspirations];renderCards()}catch(e){$('#catalog').innerHTML='<div class="empty">بارگذاری گالری ناموفق بود. صفحه را دوباره باز کنید.</div>';toast(e.message)}}
 $$('[data-filter]').forEach(b=>b.addEventListener('click',()=>{$$('[data-filter]').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.filter=b.dataset.filter;renderCards()}));
 function renderCards(){let list=state.items.filter(x=>state.filter==='all'||cardCategory(x)===state.filter);$('#catalog').innerHTML=list.length?list.map((x)=>{let selected=state.selected&&state.selected.id===x.id,src=validImg(x.image)?x.image:'',name=esc(x.title),id=esc(x.id);return '<button class="look '+(selected?'chosen':'')+'" type="button" data-look="'+id+'" aria-label="انتخاب '+name+'">'+(src?'<img src="'+src+'" alt="'+name+'" loading="lazy">':'<div class="empty">✧<br>بدون تصویر</div>')+'<div class="lookcap"><div><strong>'+name+'</strong><small>'+(x.source==='maison'?'MAISON COLLECTION':'DAILY EDIT · CONCEPT')+'</small></div><span class="pill">'+categoryTitle(x)+'</span></div></button>'}).join(''):'<div class="empty">در این دسته لباسی ثبت نشده است.</div>';
@@ -39,7 +61,7 @@ $('#savePreview').onclick=async()=>{if(!state.person||!state.garment)return toas
 $('#realAI').onclick=()=>{if(!$('#aiConsent').checked)return toast('ابتدا شرایط ارسال عکس به سرویس بیرونی را بپذیرید.');window.open('https://huggingface.co/spaces/fashn-ai/fashn-vton-1.5','_blank','noopener,noreferrer');toast('سرویس رایگان باز شد؛ عکس شخص و لباس را داخل آن بارگذاری کنید.');};
 $('#requestType').onchange=e=>{if(e.target.value==='custom')$('#garmentFile').focus()};
 function getMeasures(){const data=new FormData($('#measureForm')),out={};for(let k of ['waist','hip','length','hipDepth','bust','height','shoulders','sleeve','arm']){let s=data.get(k);out[k]=s?Number(s):null;}for(let k of ['type','fabric','fit'])out[k]=String(data.get(k)||'');return out}
-function validate(m){if(!m.waist||!m.hip||!m.length||!m.hipDepth)throw Error('چهار اندازه ستاره‌دار ضروری است.');if(m.hip<m.waist)return new Error('دور باسن از دور کمر کمتر است؛ اندازه‌ها را بازبینی کنید.');if(m.hipDepth>=m.length)throw Error('فاصله کمر تا باسن باید از قد لباس کمتر باشد.');if(m.type==='skirt'&&m.fabric==='stretch')throw Error('برای دامن کشی، درصد کشسانی پارچه باید به‌صورت تخصصی اندازه‌گیری شود.')}
+function validate(m){if(!m.waist||!m.hip||!m.length||!m.hipDepth)throw Error('چهار اندازه ستاره‌دار ضروری است.');if(m.hip<m.waist)throw new Error('دور باسن از دور کمر کمتر است؛ اندازه‌ها را بازبینی کنید.');if(m.hipDepth>=m.length)throw Error('فاصله کمر تا باسن باید از قد لباس کمتر باشد.');if(m.type==='skirt'&&m.fabric==='stretch')throw Error('برای دامن کشی، درصد کشسانی پارچه باید به‌صورت تخصصی اندازه‌گیری شود.')}
 function skirtSVG(m){
 let ease=m.fit==='fitted'?2:m.fit==='relaxed'?8:4,H=(m.hip+ease)/4,W=(m.waist+2)/4,diff=H-W;
 if(diff>13)throw Error('اختلاف کمر و باسن زیاد است و این پیش‌نویس ساده برای اندام شما کافی نیست.');const width=H*10,front=28,back=28+width+75,top=92,height=m.length*10,hyp=m.hipDepth*10,side=Math.min(3.5,Math.max(0,diff*.52)),dart=diff-side;const ww=width-side*10;const Wmm=Math.ceil(width*2+135),Hmm=Math.ceil(height+195);
