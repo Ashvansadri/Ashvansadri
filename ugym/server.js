@@ -4,6 +4,36 @@ const fs=require('node:fs');
 const path=require('node:path');
 const crypto=require('node:crypto');
 const {Pool}=require('pg');
+// Dependency-free PNG fallback icons for Android/iOS installability.
+const zlib=require('node:zlib');
+const iconCache=new Map();
+function iconPng(size){
+ if(iconCache.has(size))return iconCache.get(size);
+ const rowSize=size*4+1,raw=Buffer.alloc(rowSize*size);
+ function rounded(x,y){let m=.02,r=.11;let dx=Math.max(m+r-x,0,x-(1-m-r)),dy=Math.max(m+r-y,0,y-(1-m-r));return dx*dx+dy*dy<=r*r;}
+ for(let py=0;py<size;py++){
+   const y=(py+.5)/size,base=py*rowSize;raw[base]=0;
+   for(let px=0;px<size;px++){
+     const x=(px+.5)/size,j=base+1+px*4;
+     let color=[26,21,44];
+     if(rounded(x,y))color=[31,24,55];
+     const uLeft=Math.abs(x-.27)<.062&&y>=.20&&y<=.65;
+     const uRight=Math.abs(x-.73)<.062&&y>=.20&&y<=.65;
+     const ring=y>=.6&&Math.abs(Math.hypot(x-.5,y-.6)-.23)<.061;
+     if(uLeft)color=[197,177,255];if(uRight)color=[143,222,211];if(ring)color=[179,166,255];
+     if(x>.16&&x<.84&&Math.abs(y-.45)<.017)color=[230,224,255];
+     if((Math.abs(x-.14)<.023||Math.abs(x-.86)<.023)&&Math.abs(y-.45)<.046)color=x<.5?[167,135,245]:[132,220,208];
+     if((x<.02||x>.98||y<.02||y>.98))color=[26,21,44];
+     raw[j]=color[0];raw[j+1]=color[1];raw[j+2]=color[2];raw[j+3]=255;
+   }
+ }
+ function crc(buf){let v=0xffffffff;for(const byte of buf){v^=byte;for(let i=0;i<8;i++)v=(v&1)?(v>>>1)^0xedb88320:v>>>1;}return(v^0xffffffff)>>>0;}
+ function chunk(t,b){const name=Buffer.from(t),len=Buffer.alloc(4),sum=Buffer.alloc(4);len.writeUInt32BE(b.length);sum.writeUInt32BE(crc(Buffer.concat([name,b])));return Buffer.concat([len,name,b,sum]);}
+ const ihdr=Buffer.alloc(13);ihdr.writeUInt32BE(size,0);ihdr.writeUInt32BE(size,4);ihdr[8]=8;ihdr[9]=6;
+ const result=Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',ihdr),chunk('IDAT',zlib.deflateSync(raw,{level:9})),chunk('IEND',Buffer.alloc(0))]);
+ iconCache.set(size,result);return result;
+}
+
 const ROOT=path.join(__dirname,'public');
 const DB_READY=Boolean(process.env.DATABASE_URL); const pool=DB_READY?new Pool({connectionString:process.env.DATABASE_URL,max:5,idleTimeoutMillis:30000,connectionTimeoutMillis:15000,ssl:{rejectUnauthorized:true}}):null;
 const PORT=Number(process.env.PORT||10000);
@@ -48,6 +78,7 @@ async function handler(req,res){
   const ip=req.socket.remoteAddress||'unknown';
   if(limit(ip))return fail(res,429,'درخواست بیش از حد؛ کمی بعد تلاش کنید');
   const url=new URL(req.url,'http://localhost'),p=url.pathname;
+  const iconMatch=p.match(/^\/icon-(192|512)\.png$/);if(req.method==='GET'&&iconMatch){const bytes=iconPng(Number(iconMatch[1]));res.writeHead(200,{'Content-Type':'image/png','Content-Length':bytes.length,'Cache-Control':'public,max-age=86400'});res.end(bytes);return;}
   if(!DB_READY&&p==='/api/me'&&req.method==='GET')return send(res,200,{user:null});
   if(!DB_READY&&p.startsWith('/api/'))return fail(res,503,'پایگاه داده هنوز به Render متصل نشده است');
   if(req.method==='GET'&&p==='/api/health'){try{await pool.query('SELECT 1');return send(res,200,{ok:true,time:now()});}catch{return fail(res,503,'پایگاه داده در دسترس نیست');}}
