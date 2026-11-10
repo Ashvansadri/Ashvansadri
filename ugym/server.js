@@ -98,16 +98,15 @@ async function handler(req,res){
         if(!/^[a-f0-9]{64}$/.test(invite))return fail(res,403,'لینک دعوت مدیر معتبر نیست');
         if(!/^[a-z][a-z0-9_]{2,31}$/.test(username))return fail(res,400,'نام کاربری باید ۳ تا ۳۲ حرف انگلیسی، عدد یا زیرخط باشد و با حرف شروع شود');
         if(!validEmail(email)||full_name.length<2||pass.length<10||pass.length>128)return fail(res,400,'نام، ایمیل یا رمز معتبر نیست؛ رمز باید حداقل ۱۰ نویسه باشد');
+        const expected=String(process.env.OWNER_INVITE_HASH||'');
+        if(!/^[a-f0-9]{64}$/.test(expected)||!crypto.timingSafeEqual(Buffer.from(hash(invite),'hex'),Buffer.from(expected,'hex')))return fail(res,403,'لینک خصوصی مدیریت معتبر نیست');
         const client=await pool.connect();let created=null;
         try{
           await client.query('BEGIN');
           await client.query('SELECT pg_advisory_xact_lock(865713270)');
           const exists=await client.query("SELECT EXISTS(SELECT 1 FROM ug_users WHERE role='admin') AS n");
           if(exists.rows[0].n){await client.query('ROLLBACK');return fail(res,409,'حساب مدیر قبلاً ساخته شده است');}
-          const check=await client.query("SELECT token_hash FROM ug_owner_invites WHERE token_hash=$1 AND expires_at>NOW() FOR UPDATE",[hash(invite)]);
-          if(check.rows.length!==1){await client.query('ROLLBACK');return fail(res,403,'لینک دعوت منقضی یا استفاده شده است');}
           const made=await client.query("INSERT INTO ug_users(role,full_name,email,username,password_hash) VALUES('admin',$1,$2,$3,$4) RETURNING id",[full_name,email,username,pwHash(pass)]);
-          await client.query("DELETE FROM ug_owner_invites WHERE token_hash=$1",[hash(invite)]);
           await client.query('COMMIT');created=made.rows[0].id;
         }catch(e){await client.query('ROLLBACK').catch(()=>{});if(e.code==='23505')return fail(res,409,'ایمیل یا نام کاربری تکراری است');throw e;}
         finally{client.release();}
