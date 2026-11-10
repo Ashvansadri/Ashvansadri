@@ -1,0 +1,20 @@
+{
+  "name": "UGYM | Fitness & Wellness Club",
+  "short_name": "UGYM",
+  "description": "باشگاه هوشمند UGYM",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#070811",
+  "theme_color": "#080a13",
+  "dir": "rtl",
+  "lang": "fa",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    }
+  ]
+}
