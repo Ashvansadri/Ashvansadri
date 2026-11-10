@@ -31,17 +31,38 @@ function moneySum(arr,status){return arr.filter(x=>!status||x.status===status).r
 function sportSelect(v){return '<select name="discipline">'+DISC.map(x=>'<option '+(v===x?'selected':'')+'>'+h(x)+'</option>').join('')+'</select>';}
 function shortTableMembers(arr){return table(['ورزشکار','رشته','سابقه','پرونده'],arr.map(x=>'<tr><td>'+h(x.full_name)+'</td><td>'+h(x.discipline)+'</td><td>'+n(x.measurement_count)+' ثبت</td><td><button class="action-link" data-person="'+x.id+'">مشاهده ←</button></td></tr>'));}
 function shortTablePayments(arr){return table(['ورزشکار','مبلغ','وضعیت','تاریخ'],arr.map(x=>'<tr><td>'+h(x.full_name||'شما')+'</td><td>'+money(x.amount_toman)+'</td><td>'+chip(x.status)+'</td><td>'+when(x.created_at)+'</td></tr>'));}
+function captureOwnerInvite(){
+ try{
+  const hsh=new URLSearchParams(location.hash.replace(/^#/,'')),incoming=hsh.get('invite');
+  if(incoming&&/^[a-f0-9]{64}$/.test(incoming)){sessionStorage.setItem('ugym_owner_invite',incoming);history.replaceState(null,'',location.pathname);}
+  return sessionStorage.getItem('ugym_owner_invite')||'';
+ }catch{return'';}
+}
 function authPage(mode){
  show('page-auth');
- const setup=mode==='setup',reg=mode==='register';
- $('auth-kicker').textContent=setup?'UGYM / OWNER SETUP':'UGYM / ACCOUNT';
- $('auth-title').textContent=setup?'راه‌اندازی مدیریت':reg?'به UGYM خوش آمدی!':'خوش برگشتی!';
- $('auth-subtitle').textContent=setup?'با کلید اولیه، حساب اختصاصی مدیر باشگاه را بساز.':reg?'اطلاعاتت را وارد کن و مسیرت را شروع کن.':'برای ادامه مسیر وارد حساب خودت شو.';
- $('auth-name-box').hidden=!(reg||setup);$('auth-sport-box').hidden=!reg;$('setup-key-box').hidden=!setup;
- $('auth-submit').textContent=setup?'ایجاد حساب مدیر ←':reg?'ثبت‌نام ورزشکار ←':'ورود به حساب ←';
- $('auth-switch').href=reg||setup?'/login':'/register';$('auth-switch').textContent=reg||setup?'قبلاً حساب ساخته‌ای؟ ورود':'حساب نداری؟ ثبت‌نام کن';
- $('auth-form').reset();$('auth-form').querySelector('input[name=password]').setAttribute('autocomplete',reg||setup?'new-password':'current-password');$('auth-error').hidden=true;
- if(setup)api('/api/bootstrap-status').then(x=>{if(!x.needs_setup){$('auth-error').textContent='حساب مدیریت قبلاً فعال شده است. از صفحه ورود استفاده کنید.';$('auth-error').hidden=false;$('auth-submit').disabled=true;}else $('auth-submit').disabled=false;}).catch(e=>flash(e.message,true));else $('auth-submit').disabled=false;
+ const setup=mode==='setup',reg=mode==='register',ownerInvite=setup?captureOwnerInvite():'';
+ $('auth-kicker').textContent=setup?'UGYM / PRIVATE OWNER INVITE':'UGYM / ACCOUNT';
+ $('auth-title').textContent=setup?'ساخت حساب مدیریت':reg?'به UGYM خوش آمدی!':'خوش برگشتی!';
+ $('auth-subtitle').textContent=setup?'نام کاربری و رمز دلخواه خودت را انتخاب کن؛ این دعوت‌نامه فقط یک بار معتبر است.':reg?'اطلاعاتت را وارد کن و مسیرت را شروع کن.':'با نام کاربری یا ایمیل و رمز عبور وارد شو.';
+ $('auth-name-box').hidden=!(reg||setup);$('auth-sport-box').hidden=!reg;
+ $('setup-username-box').hidden=!setup;
+ $('auth-identifier-box').hidden=reg||setup;
+ $('auth-email-box').hidden=!(reg||setup);
+ $('auth-form').reset();
+ $('auth-form').querySelector('input[name=identifier]').required=!(reg||setup);
+ $('auth-form').querySelector('input[name=email]').required=reg||setup;
+ $('auth-form').querySelector('input[name=username]').required=setup;
+ $('auth-form').querySelector('input[name=full_name]').required=reg||setup;
+ $('auth-form').querySelector('input[name=password]').setAttribute('autocomplete',reg||setup?'new-password':'current-password');
+ $('auth-submit').textContent=setup?'ایجاد حساب مدیریت ←':reg?'ثبت‌نام ورزشکار ←':'ورود به حساب ←';
+ $('auth-switch').href=reg||setup?'/login':'/register';
+ $('auth-switch').textContent=reg||setup?'قبلاً حساب ساخته‌ای؟ ورود':'حساب نداری؟ ثبت‌نام کن';
+ $('auth-error').hidden=true;
+ $('auth-submit').disabled=false;
+ if(setup){
+  if(!ownerInvite){$('auth-error').textContent='این بخش فقط با لینک دعوت اختصاصی صاحب باشگاه فعال می‌شود.';$('auth-error').hidden=false;$('auth-submit').disabled=true;}
+  api('/api/bootstrap-status').then(x=>{if(!x.needs_setup){$('auth-error').textContent='حساب مدیریت قبلاً ساخته شده است. از صفحه ورود استفاده کن.';$('auth-error').hidden=false;$('auth-submit').disabled=true;}}).catch(e=>flash(e.message,true));
+ }
 }
 function renderAdminOverview(){
  const a=S.admin;let paid=Number(a.financial?.paid_total||0),pending=Number(a.financial?.pending_total||0);
@@ -146,9 +167,10 @@ async function boot(){
 document.addEventListener('submit',async function(ev){
  const form=ev.target;if(form.id!=='auth-form'&&!form.dataset.form)return;ev.preventDefault();
  const d=Object.fromEntries(new FormData(form).entries()),kind=form.id==='auth-form'?location.pathname.slice(1):form.dataset.form;
+ if(kind==='setup')d.invite=captureOwnerInvite();
  const routes={login:'/api/auth/login',register:'/api/auth/register',setup:'/api/bootstrap','member-create':'/api/admin/member/create','person-update':'/api/admin/member/update',measurement:'/api/admin/measurement',payment:'/api/admin/payment',class:'/api/admin/class'};
  let b=form.querySelector('[type=submit]');if(b)b.disabled=true;
- try{await api(routes[kind],d);if(['login','register','setup'].includes(kind)){if(kind==='login'){const x=await api('/api/me');location.assign(x.user?.role==='admin'?'/admin':'/member');}else{location.assign(kind==='setup'?'/admin':'/member');}return;}
+ try{await api(routes[kind],d);if(['login','register','setup'].includes(kind)){if(kind==='login'){const x=await api('/api/me');location.assign(x.user?.role==='admin'?'/admin':'/member');}else{if(kind==='setup'){try{sessionStorage.removeItem('ugym_owner_invite');}catch{}}location.assign(kind==='setup'?'/admin':'/member');}return;}
  flash('اطلاعات با موفقیت ذخیره شد');if(kind==='member-create'||kind==='measurement'||kind==='payment'||kind==='class')form.reset();await loadAdmin();
  }catch(e){if(form.id==='auth-form'){$('auth-error').textContent=e.message;$('auth-error').hidden=false;}else flash(e.message,true);}finally{if(b)b.disabled=false;}
 });
