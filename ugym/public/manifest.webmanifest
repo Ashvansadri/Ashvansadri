@@ -1,0 +1,21 @@
+{
+  "id": "/member",
+  "name": "UGYM | Fitness & Wellness Club",
+  "short_name": "UGYM",
+  "description": "باشگاه هوشمند و پنل ورزشکاران",
+  "start_url": "/member",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#070811",
+  "theme_color": "#080a13",
+  "lang": "fa",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
