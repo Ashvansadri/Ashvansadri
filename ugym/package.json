@@ -3,7 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "description": "UGYM fitness club member and admin PWA",
-  "engines": {"node": ">=20"},
-  "scripts": {"start": "node ugym/server.js", "check": "node --check ugym/server.js && node --check ugym/public/app.js"},
-  "dependencies": {"pg": "8.13.1"}
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check public/app.js"
+  },
+  "dependencies": {
+    "pg": "8.13.1"
+  }
 }
