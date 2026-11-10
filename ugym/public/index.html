@@ -46,9 +46,10 @@
    <section class="container foot-cta"><span>READY FOR YOUR NEXT LEVEL?</span><h2>نسخه بهتر خودت از همین‌جا شروع می‌شود.</h2><a href="/register" class="btn btn-primary">به UGYM بپیوند ←</a></section>
   </section>
   <section id="page-auth" class="auth-page" hidden><div class="auth-art"><div class="big-u">U</div><span>OWN YOUR PROGRESS.</span><h2>بدنی قدرتمند،<br>ذهنی متعادل.</h2></div><div class="auth-wrap"><div class="auth-box"><span class="kicker" id="auth-kicker">UGYM / SECURE ACCESS</span><h2 id="auth-title">خوش برگشتی!</h2><p id="auth-subtitle">برای ادامه مسیر، وارد حساب خودت شو.</p><form id="auth-form" autocomplete="on">
-   <div id="setup-key-box" hidden><label>کلید اولیه راه‌اندازی مدیریت</label><input name="key" type="password" autocomplete="off" placeholder="کلید اختصاصی راه‌اندازی"></div>
+   <div id="setup-username-box" hidden><label>نام کاربری مدیر (انگلیسی)</label><input name="username" autocomplete="username" placeholder="مثلاً ugym_manager" minlength="3" maxlength="32" pattern="[a-zA-Z][a-zA-Z0-9_]{2,31}"></div>
    <div id="auth-name-box" hidden><label>نام و نام خانوادگی</label><input name="full_name" placeholder="مثلاً نیلوفر احمدی" autocomplete="name"></div>
-   <label>ایمیل</label><input name="email" type="email" placeholder="name@example.com" autocomplete="email" required>
+   <div id="auth-identifier-box"><label>نام کاربری یا ایمیل</label><input name="identifier" type="text" placeholder="نام کاربری یا ایمیل شما" autocomplete="username" required></div>
+   <div id="auth-email-box" hidden><label>ایمیل بازیابی و ارتباط</label><input name="email" type="email" placeholder="name@example.com" autocomplete="email"></div>
    <label>رمز عبور</label><input name="password" type="password" placeholder="حداقل ۱۰ کاراکتر" minlength="10" autocomplete="current-password" required>
    <div id="auth-sport-box" hidden><label>رشته اصلی</label><select name="discipline"><option>بدنسازی</option><option>پیلاتس</option><option>ایروبیک</option><option>TRX</option></select></div>
    <button class="btn btn-primary btn-full" id="auth-submit" type="submit">ورود به حساب ←</button>
