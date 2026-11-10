@@ -110,12 +110,13 @@ async function handler(req,res){
       }
       if(!isRole(u,'admin'))return fail(res,403,'این بخش فقط مخصوص مدیر است');
       if(p==='/api/admin/overview'&&req.method==='GET'){
-        const [members,classes,payments,bookings]=await Promise.all([
+        const [members,classes,payments,bookings,financial]=await Promise.all([
           pool.query("SELECT u.id,u.full_name,u.email,u.discipline,u.goal,u.height_cm,u.created_at,(SELECT COUNT(*)::int FROM ug_measurements m WHERE m.user_id=u.id) measurement_count FROM ug_users u WHERE u.role='member' ORDER BY u.id DESC LIMIT 1000"),
           pool.query("SELECT * FROM ug_classes ORDER BY id DESC LIMIT 200"),
           pool.query("SELECT p.*,u.full_name FROM ug_payments p JOIN ug_users u ON u.id=p.user_id ORDER BY p.created_at DESC LIMIT 300"),
-          pool.query("SELECT b.*,u.full_name,c.title FROM ug_bookings b JOIN ug_users u ON u.id=b.user_id JOIN ug_classes c ON c.id=b.class_id ORDER BY b.class_date DESC,b.id DESC LIMIT 250")
-        ]);return send(res,200,{members:members.rows,classes:classes.rows,payments:payments.rows,bookings:bookings.rows});
+          pool.query("SELECT b.*,u.full_name,c.title FROM ug_bookings b JOIN ug_users u ON u.id=b.user_id JOIN ug_classes c ON c.id=b.class_id ORDER BY b.class_date DESC,b.id DESC LIMIT 250"),
+          pool.query("SELECT COALESCE(SUM(amount_toman) FILTER (WHERE status='paid'),0)::text AS paid_total, COALESCE(SUM(amount_toman) FILTER (WHERE status='pending'),0)::text AS pending_total,COUNT(*)::int AS payment_count FROM ug_payments")
+        ]);return send(res,200,{members:members.rows,classes:classes.rows,payments:payments.rows,bookings:bookings.rows,financial:financial.rows[0]});
       }
       if(p==='/api/admin/member'&&req.method==='GET'){
         if(!idok(url.searchParams.get('id')))return fail(res,400,'شناسه نامعتبر');
