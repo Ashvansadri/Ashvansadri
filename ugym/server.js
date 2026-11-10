@@ -5,7 +5,7 @@ const path=require('node:path');
 const crypto=require('node:crypto');
 const {Pool}=require('pg');
 const ROOT=path.join(__dirname,'public');
-const pool=new Pool({connectionString:process.env.DATABASE_URL, max:5, idleTimeoutMillis:30000, connectionTimeoutMillis:15000, ssl:{rejectUnauthorized:true}});
+const DB_READY=Boolean(process.env.DATABASE_URL); const pool=DB_READY?new Pool({connectionString:process.env.DATABASE_URL,max:5,idleTimeoutMillis:30000,connectionTimeoutMillis:15000,ssl:{rejectUnauthorized:true}}):null;
 const PORT=Number(process.env.PORT||10000);
 const MAX=35000;
 const bins=new Map();
@@ -27,7 +27,7 @@ const positive=(x,max)=>Number.isFinite(Number(x))&&Number(x)>=0&&Number(x)<=max
 const value=(x,max)=>x===''||x==null?null:positive(x,max)?Number(x):undefined;
 const idok=(x)=>Number.isSafeInteger(Number(x))&&Number(x)>0;
 async function init(){
-  if(!process.env.DATABASE_URL)throw new Error('DATABASE_URL is required');
+  if(!DB_READY){console.warn('UGYM: waiting for DATABASE_URL environment variable');return;}
   await pool.query("CREATE TABLE IF NOT EXISTS ug_users (id BIGSERIAL PRIMARY KEY, role TEXT NOT NULL CHECK(role IN('admin','member')), full_name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, discipline TEXT NOT NULL DEFAULT 'بدنسازی', goal TEXT NOT NULL DEFAULT '', height_cm NUMERIC(5,1), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
   await pool.query("CREATE TABLE IF NOT EXISTS ug_sessions (token_hash TEXT PRIMARY KEY,user_id BIGINT NOT NULL REFERENCES ug_users(id) ON DELETE CASCADE,expires_at TIMESTAMPTZ NOT NULL)");
   await pool.query("CREATE TABLE IF NOT EXISTS ug_classes (id BIGSERIAL PRIMARY KEY,discipline TEXT NOT NULL,title TEXT NOT NULL,coach TEXT NOT NULL,weekday INTEGER NOT NULL CHECK(weekday BETWEEN 0 AND 6),start_time TEXT NOT NULL,duration_min INTEGER NOT NULL DEFAULT 60,capacity INTEGER NOT NULL DEFAULT 14,price_toman BIGINT NOT NULL DEFAULT 0,active BOOLEAN NOT NULL DEFAULT TRUE)");
@@ -44,10 +44,12 @@ async function handler(req,res){
   res.setHeader('X-Content-Type-Options','nosniff');
   res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
   res.setHeader('X-Frame-Options','DENY');
-  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'");
+  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'");
   const ip=req.socket.remoteAddress||'unknown';
   if(limit(ip))return fail(res,429,'درخواست بیش از حد؛ کمی بعد تلاش کنید');
   const url=new URL(req.url,'http://localhost'),p=url.pathname;
+  if(!DB_READY&&p==='/api/me'&&req.method==='GET')return send(res,200,{user:null});
+  if(!DB_READY&&p.startsWith('/api/'))return fail(res,503,'پایگاه داده هنوز به Render متصل نشده است');
   if(req.method==='GET'&&p==='/api/health'){try{await pool.query('SELECT 1');return send(res,200,{ok:true,time:now()});}catch{return fail(res,503,'پایگاه داده در دسترس نیست');}}
   if(p.startsWith('/api/')){
     try{
