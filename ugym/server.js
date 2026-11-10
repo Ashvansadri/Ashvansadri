@@ -49,9 +49,9 @@ function limit(ip){const t=Date.now(), v=bins.get(ip)||{n:0,t};if(t-v.t>60000){v
 function body(req){return new Promise((ok,no)=>{let s='';req.on('data',d=>{s+=d;if(s.length>MAX){no(new Error('درخواست بیش از حد بزرگ است'));req.destroy();}});req.on('end',()=>{try{ok(s?JSON.parse(s):{});}catch{no(new Error('داده نامعتبر است'));}});req.on('error',no);});}
 const clean=(v,max=160)=>String(v??'').trim().slice(0,max);
 function validEmail(v){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)&&v.length<=180;}
-function userOut(u){return {id:u.id,role:u.role,full_name:u.full_name,email:u.email,discipline:u.discipline,goal:u.goal,height_cm:u.height_cm,created_at:u.created_at};}
+function userOut(u){return {id:u.id,role:u.role,full_name:u.full_name,email:u.email,username:u.username||null,discipline:u.discipline,goal:u.goal,height_cm:u.height_cm,created_at:u.created_at};}
 function cookie(req){let v=req.headers.cookie||'';let m=v.match(/(?:^|;\s*)ugym_session=([^;]+)/);return m?.[1]||'';}
-async function auth(req){let tok=cookie(req);if(!/^[a-f0-9]{64}$/.test(tok))return null;const r=await pool.query('SELECT u.id,u.role,u.full_name,u.email,u.discipline,u.goal,u.height_cm,u.created_at FROM ug_sessions s JOIN ug_users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>NOW()',[hash(tok)]);return r.rows[0]||null;}
+async function auth(req){let tok=cookie(req);if(!/^[a-f0-9]{64}$/.test(tok))return null;const r=await pool.query('SELECT u.id,u.role,u.full_name,u.email,u.username,u.discipline,u.goal,u.height_cm,u.created_at FROM ug_sessions s JOIN ug_users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>NOW()',[hash(tok)]);return r.rows[0]||null;}
 async function session(res,userId){let tok=crypto.randomBytes(32).toString('hex');await pool.query("INSERT INTO ug_sessions(token_hash,user_id,expires_at) VALUES($1,$2,NOW()+INTERVAL '14 days')",[hash(tok),userId]);res.setHeader('Set-Cookie', 'ugym_session='+tok+'; Path=/; Max-Age=1209600; HttpOnly; Secure; SameSite=Strict');}
 const positive=(x,max)=>Number.isFinite(Number(x))&&Number(x)>=0&&Number(x)<=max;
 const value=(x,max)=>x===''||x==null?null:positive(x,max)?Number(x):undefined;
@@ -59,6 +59,10 @@ const idok=(x)=>Number.isSafeInteger(Number(x))&&Number(x)>0;
 async function init(){
   if(!DB_READY){console.warn('UGYM: waiting for DATABASE_URL environment variable');return;}
   await pool.query("CREATE TABLE IF NOT EXISTS ug_users (id BIGSERIAL PRIMARY KEY, role TEXT NOT NULL CHECK(role IN('admin','member')), full_name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, discipline TEXT NOT NULL DEFAULT 'بدنسازی', goal TEXT NOT NULL DEFAULT '', height_cm NUMERIC(5,1), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
+  await pool.query("ALTER TABLE ug_users ADD COLUMN IF NOT EXISTS username TEXT");
+  await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS ug_users_username_unique_ci ON ug_users (lower(username)) WHERE username IS NOT NULL");
+  await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS ug_users_single_owner ON ug_users ((role)) WHERE role='admin'");
+  await pool.query("CREATE TABLE IF NOT EXISTS ug_owner_invites (token_hash TEXT PRIMARY KEY,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),expires_at TIMESTAMPTZ NOT NULL)");
   await pool.query("CREATE TABLE IF NOT EXISTS ug_sessions (token_hash TEXT PRIMARY KEY,user_id BIGINT NOT NULL REFERENCES ug_users(id) ON DELETE CASCADE,expires_at TIMESTAMPTZ NOT NULL)");
   await pool.query("CREATE TABLE IF NOT EXISTS ug_classes (id BIGSERIAL PRIMARY KEY,discipline TEXT NOT NULL,title TEXT NOT NULL,coach TEXT NOT NULL,weekday INTEGER NOT NULL CHECK(weekday BETWEEN 0 AND 6),start_time TEXT NOT NULL,duration_min INTEGER NOT NULL DEFAULT 60,capacity INTEGER NOT NULL DEFAULT 14,price_toman BIGINT NOT NULL DEFAULT 0,active BOOLEAN NOT NULL DEFAULT TRUE)");
   await pool.query("CREATE TABLE IF NOT EXISTS ug_bookings (id BIGSERIAL PRIMARY KEY,user_id BIGINT NOT NULL REFERENCES ug_users(id) ON DELETE CASCADE,class_id BIGINT NOT NULL REFERENCES ug_classes(id),class_date DATE NOT NULL,status TEXT NOT NULL DEFAULT 'booked' CHECK(status IN('booked','cancelled','attended')),created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),UNIQUE(user_id,class_id,class_date))");
@@ -89,11 +93,25 @@ async function handler(req,res){
       const b=req.method==='POST'?await body(req):{};
       if(p==='/api/bootstrap-status'&&req.method==='GET'){const n=await pool.query("SELECT EXISTS(SELECT 1 FROM ug_users WHERE role='admin') AS exists");return send(res,200,{needs_setup:!n.rows[0].exists});}
       if(p==='/api/bootstrap'&&req.method==='POST'){
-        if(!process.env.SETUP_KEY||!clean(b.key,256)||clean(b.key,256)!==process.env.SETUP_KEY)return fail(res,403,'کلید راه‌اندازی معتبر نیست');
-        const n=await pool.query("SELECT EXISTS(SELECT 1 FROM ug_users WHERE role='admin') AS exists");if(n.rows[0].exists)return fail(res,409,'مدیر قبلاً ایجاد شده است');
-        let email=clean(b.email,180).toLowerCase(),full_name=clean(b.full_name,120),pass=String(b.password||'');
-        if(!validEmail(email)||full_name.length<2||pass.length<10||pass.length>128)return fail(res,400,'نام، ایمیل یا رمز عبور معتبر نیست');
-        const r=await pool.query("INSERT INTO ug_users(role,full_name,email,password_hash) VALUES('admin',$1,$2,$3) RETURNING id",[full_name,email,pwHash(pass)]);await session(res,r.rows[0].id);return send(res,201,{ok:true});
+        const invite=String(b.invite||'').trim(),username=clean(b.username,32).toLowerCase();
+        const email=clean(b.email,180).toLowerCase(),full_name=clean(b.full_name,120),pass=String(b.password||'');
+        if(!/^[a-f0-9]{64}$/.test(invite))return fail(res,403,'لینک دعوت مدیر معتبر نیست');
+        if(!/^[a-z][a-z0-9_]{2,31}$/.test(username))return fail(res,400,'نام کاربری باید ۳ تا ۳۲ حرف انگلیسی، عدد یا زیرخط باشد و با حرف شروع شود');
+        if(!validEmail(email)||full_name.length<2||pass.length<10||pass.length>128)return fail(res,400,'نام، ایمیل یا رمز معتبر نیست؛ رمز باید حداقل ۱۰ نویسه باشد');
+        const client=await pool.connect();let created=null;
+        try{
+          await client.query('BEGIN');
+          await client.query('SELECT pg_advisory_xact_lock(865713270)');
+          const exists=await client.query("SELECT EXISTS(SELECT 1 FROM ug_users WHERE role='admin') AS n");
+          if(exists.rows[0].n){await client.query('ROLLBACK');return fail(res,409,'حساب مدیر قبلاً ساخته شده است');}
+          const check=await client.query("SELECT token_hash FROM ug_owner_invites WHERE token_hash=$1 AND expires_at>NOW() FOR UPDATE",[hash(invite)]);
+          if(check.rows.length!==1){await client.query('ROLLBACK');return fail(res,403,'لینک دعوت منقضی یا استفاده شده است');}
+          const made=await client.query("INSERT INTO ug_users(role,full_name,email,username,password_hash) VALUES('admin',$1,$2,$3,$4) RETURNING id",[full_name,email,username,pwHash(pass)]);
+          await client.query("DELETE FROM ug_owner_invites WHERE token_hash=$1",[hash(invite)]);
+          await client.query('COMMIT');created=made.rows[0].id;
+        }catch(e){await client.query('ROLLBACK').catch(()=>{});if(e.code==='23505')return fail(res,409,'ایمیل یا نام کاربری تکراری است');throw e;}
+        finally{client.release();}
+        await session(res,created);return send(res,201,{ok:true});
       }
       if(p==='/api/auth/register'&&req.method==='POST'){
         let name=clean(b.full_name,120),email=clean(b.email,180).toLowerCase(),pass=String(b.password||''),discipline=clean(b.discipline,40);
@@ -102,9 +120,10 @@ async function handler(req,res){
         await session(res,r.rows[0].id);return send(res,201,{ok:true});
       }
       if(p==='/api/auth/login'&&req.method==='POST'){
-        const email=clean(b.email,180).toLowerCase(),pass=String(b.password||'');
-        const r=await pool.query("SELECT id,password_hash FROM ug_users WHERE email=$1",[email]);
-        if(!r.rows.length||!pwCheck(pass,r.rows[0].password_hash))return fail(res,401,'ایمیل یا رمز عبور نادرست است');
+        const identifier=clean(b.identifier||b.email,180).toLowerCase(),pass=String(b.password||'');
+        if(identifier.length<3||pass.length>128)return fail(res,401,'نام کاربری یا رمز عبور نادرست است');
+        const r=await pool.query("SELECT id,password_hash FROM ug_users WHERE lower(email)=$1 OR lower(username)=$1 LIMIT 1",[identifier]);
+        if(!r.rows.length||!pwCheck(pass,r.rows[0].password_hash))return fail(res,401,'نام کاربری یا رمز عبور نادرست است');
         await session(res,r.rows[0].id);return send(res,200,{ok:true});
       }
       if(p==='/api/auth/logout'&&req.method==='POST'){
