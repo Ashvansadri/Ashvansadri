@@ -148,7 +148,7 @@ document.addEventListener('submit',async function(ev){
  const d=Object.fromEntries(new FormData(form).entries()),kind=form.id==='auth-form'?location.pathname.slice(1):form.dataset.form;
  const routes={login:'/api/auth/login',register:'/api/auth/register',setup:'/api/bootstrap','member-create':'/api/admin/member/create','person-update':'/api/admin/member/update',measurement:'/api/admin/measurement',payment:'/api/admin/payment',class:'/api/admin/class'};
  let b=form.querySelector('[type=submit]');if(b)b.disabled=true;
- try{await api(routes[kind],d);if(['login','register','setup'].includes(kind)){location.assign(kind==='setup'?'/admin':kind==='register'?'/member':'/');return;}
+ try{await api(routes[kind],d);if(['login','register','setup'].includes(kind)){if(kind==='login'){const x=await api('/api/me');location.assign(x.user?.role==='admin'?'/admin':'/member');}else{location.assign(kind==='setup'?'/admin':'/member');}return;}
  flash('اطلاعات با موفقیت ذخیره شد');if(kind==='member-create'||kind==='measurement'||kind==='payment'||kind==='class')form.reset();await loadAdmin();
  }catch(e){if(form.id==='auth-form'){$('auth-error').textContent=e.message;$('auth-error').hidden=false;}else flash(e.message,true);}finally{if(b)b.disabled=false;}
 });
