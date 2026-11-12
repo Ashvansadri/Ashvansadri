@@ -41,6 +41,9 @@ function installHelp(){
    copy.textContent=success?'آدرس کپی شد؛ Safari را باز کن ✓':'کپی نشد؛ آدرس سایت را از نوار بالای صفحه کپی کن';
   });
   box.append(copy);
+  const portalNote=document.createElement('p');portalNote.className='install-portal-note';portalNote.textContent='برای نصب پنل کامل ورزشکار یا مدیریت، لازم است صفحه ورود همان پنل را هم در Safari باز کنی و آن را به صفحه اصلی اضافه کنی. چون سایت معرفی و پنل روی دو آدرس جدا هستند.';
+  const portalLink=document.createElement('a');portalLink.className='install-copy-url';portalLink.href='https://ugym-fitness-club-2026.onrender.com/login';portalLink.textContent='باز کردن پنل UGYM برای نصب ↗';portalLink.style.display='block';portalLink.style.textAlign='center';portalLink.style.textDecoration='none';
+  box.append(portalNote,portalLink);
  }else if(/android/i.test(navigator.userAgent)){
   box.append(stepLine('۱','این آدرس را در Chrome باز کن.'));
   box.append(stepLine('۲','از منوی سه‌نقطه مرورگر، Install app یا Add to Home screen را انتخاب کن.'));
