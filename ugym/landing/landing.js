@@ -20,17 +20,39 @@ const answers=[
 ];
 function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true}
 const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const inSafari=()=>/safari/i.test(navigator.userAgent)&&!/crios|fxios|edgios|optios|duckduckgo|gsa|instagram|telegram|fbav|fban|chatgpt/i.test(navigator.userAgent);
+const installButton=$('install-shortcut');
+if(isIOS())installButton.innerHTML='راهنمای نصب آیفون <span>↗</span>';
+function stepLine(n,text){const row=document.createElement('div');row.className='ios-install-step';const num=document.createElement('b');num.textContent=n;const content=document.createElement('span');content.textContent=text;row.append(num,content);return row;}
 function installHelp(){
- const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
- const android=/android/i.test(navigator.userAgent);
- const text=isStandalone()?'UGYM هم‌اکنون مثل یک اپ روی دستگاه شما باز شده است.':ios
- ?'در Safari صفحه UGYM را باز کن؛ دکمه Share (اشتراک‌گذاری) را بزن و سپس «Add to Home Screen / افزودن به صفحه اصلی» را انتخاب کن. بعضی مرورگرهای داخلی اینستاگرام و تلگرام گزینه نصب ندارند.'
- :android?'در Chrome، منوی سه‌نقطه را بزن و «Install app / نصب برنامه» یا «Add to Home screen» را انتخاب کن. اگر گزینه نمایش داده نشد، صفحه را در Chrome باز کن.'
- :'در Chrome یا Edge، از منوی مرورگر «Install UGYM» یا «Install app» را انتخاب کن. اگر نصب در دسترس نبود، می‌توانی سایت را به نشانک‌های مرورگر اضافه کنی.';
- $('install-steps').textContent=text;$('install-modal').hidden=false;
+ const box=$('install-steps');box.replaceChildren();
+ if(isStandalone()){box.append(stepLine('✓','UGYM هم‌اکنون مانند یک برنامه از صفحه اصلی گوشی باز شده است.'));}
+ else if(isIOS()){
+  if(!inSafari()){box.append(stepLine('۱','الان داخل مرورگر داخلی یک برنامه هستی. گزینه Open in Safari را از منوی مرورگر انتخاب کن؛ یا آدرس سایت را کپی و داخل Safari باز کن.'));}
+  else{box.append(stepLine('۱','خود Safari باز است؛ روی دکمه اشتراک‌گذاری (مربع با فلش رو به بالا) یا Page Menu ← Share بزن.'));}
+  box.append(stepLine('۲','در Safari، داخل منوی Share روی Add to Home Screen / افزودن به صفحه اصلی بزن. اگر آن را نمی‌بینی، آخر فهرست گزینه Edit Actions را باز کن.'));
+  box.append(stepLine('۳','گزینه Open as Web App را روشن کن و Add را بزن. آیکون UGYM روی صفحه اصلی آیفون اضافه می‌شود.'));
+  const copy=document.createElement('button');copy.type='button';copy.className='install-copy-url';copy.textContent='کپی آدرس برای بازکردن در Safari';
+  copy.addEventListener('click',async()=>{
+   const url='https://ugym-official-app-2026.onrender.com/';
+   let success=false;try{await navigator.clipboard.writeText(url);success=true;}catch{}
+   if(!success){const field=document.createElement('textarea');field.value=url;field.style.cssText='position:fixed;left:-9999px;opacity:0';document.body.append(field);field.select();try{success=document.execCommand('copy')}catch{}field.remove();}
+   copy.textContent=success?'آدرس کپی شد؛ Safari را باز کن ✓':'کپی نشد؛ آدرس سایت را از نوار بالای صفحه کپی کن';
+  });
+  box.append(copy);
+ }else if(/android/i.test(navigator.userAgent)){
+  box.append(stepLine('۱','این آدرس را در Chrome باز کن.'));
+  box.append(stepLine('۲','از منوی سه‌نقطه مرورگر، Install app یا Add to Home screen را انتخاب کن.'));
+  box.append(stepLine('۳','روی Install یا Add بزن تا آیکون UGYM اضافه شود.'));
+ }else{
+  box.append(stepLine('۱','سایت را در Chrome یا Edge باز کن.'));
+  box.append(stepLine('۲','از منوی مرورگر Install app یا نصب برنامه را انتخاب کن.'));
+ }
+ $('install-modal').hidden=false;
 }
 async function install(){
- if(isStandalone()){installHelp();return}
+ if(isIOS()||isStandalone()){installHelp();return;}
  if(installPrompt){
   const p=installPrompt;installPrompt=null;await p.prompt();
   try{const x=await p.userChoice;if(x.outcome==='accepted')$('install-strip').hidden=true;}catch{}
@@ -38,7 +60,7 @@ async function install(){
 }
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;});
 window.addEventListener('appinstalled',()=>{$('install-strip').hidden=true;installPrompt=null;});
-$('install-shortcut').addEventListener('click',install);
+installButton.addEventListener('click',install);
 $('install-modal-close').addEventListener('click',()=>{$('install-modal').hidden=true});
 $('install-understood').addEventListener('click',()=>{$('install-modal').hidden=true});
 $('install-modal').addEventListener('click',e=>{if(e.target===$('install-modal'))$('install-modal').hidden=true});
