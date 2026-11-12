@@ -1,5 +1,5 @@
 {
-  "name": "UGYM | Fitness & Wellness Club",
+  "name": "UGYM | باشگاه بانوان",
   "short_name": "UGYM",
   "description": "باشگاه هوشمند UGYM",
   "start_url": "/",
@@ -11,9 +11,15 @@
   "lang": "fa",
   "icons": [
     {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "/logo.svg",
-      "type": "image/svg+xml",
       "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
     }
   ]
