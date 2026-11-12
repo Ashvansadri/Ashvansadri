@@ -3,11 +3,12 @@
  const $=id=>document.getElementById(id);
  let deferred=null;
  const header=$('ug-installbar'),modal=$('ug-installhelp'),help=$('ug-helptext');
+ if(/iphone|ipad|ipod/i.test(navigator.userAgent))$('ug-installbtn').textContent='راهنمای نصب آیفون ↗';
  const standalone=()=>window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
  function manualHelp(){
   let text;
   if(standalone())text='UGYM هم‌اکنون مثل یک اپ روی دستگاهت نصب یا باز شده است.';
-  else if(/iphone|ipad|ipod/i.test(navigator.userAgent))text='در مرورگر Safari، دکمه Share را بزن و «Add to Home Screen / افزودن به صفحه اصلی» را انتخاب کن. اگر داخل مرورگر تلگرام یا اینستاگرام هستی، اول لینک را در Safari باز کن.';
+  else if(/iphone|ipad|ipod/i.test(navigator.userAgent))text='۱. لینک همین پنل UGYM را در Safari باز کن (نه مرورگر داخلی ChatGPT یا تلگرام). ۲. از دکمه Share یا Page Menu ← Share استفاده کن. ۳. گزینه Add to Home Screen را بزن؛ اگر نبود در Edit Actions پیدایش کن. ۴. Open as Web App را فعال کن و Add را بزن. با این کار، پنل شخصی UGYM از آیکون صفحه اصلی اجرا می‌شود.';
   else if(/android/i.test(navigator.userAgent))text='در Chrome، منوی سه‌نقطه را باز کن و «Install app / نصب برنامه» یا «Add to Home screen» را انتخاب کن.';
   else text='در Chrome یا Edge، از منوی مرورگر گزینه «Install app» یا «نصب برنامه» را انتخاب کن. اگر گزینه در دسترس نیست می‌توانی UGYM را به نشانک‌ها اضافه کنی.';
   help.textContent=text;modal.hidden=false;
