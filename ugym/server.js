@@ -212,7 +212,11 @@ async function handler(req,res){
     }catch(e){console.error('API',p,e.code||e.message);return fail(res,500,'خطای داخلی سرور؛ دوباره تلاش کنید');}
   }
   if(req.method!=='GET')return fail(res,405,'روش مجاز نیست');
-  const files={'/':'index.html','/admin':'index.html','/member':'index.html','/setup':'index.html','/login':'index.html','/register':'index.html','/index.html':'index.html','/app.js':'app.js','/style.css':'style.css','/manifest.webmanifest':'manifest.webmanifest','/sw.js':'sw.js','/logo.svg':'logo.svg'};
+  if(p==='/icon-192.png'||p==='/icon-512.png'||p==='/apple-touch-icon.png'){
+    const icon=iconPng(p==='/icon-512.png'?512:p==='/icon-192.png'?192:180);
+    res.writeHead(200,{'Content-Type':'image/png','Cache-Control':'public,max-age=604800','Content-Length':icon.length});res.end(icon);return;
+  }
+  const files={'/':'index.html','/admin':'index.html','/member':'index.html','/setup':'index.html','/login':'index.html','/register':'index.html','/index.html':'index.html','/app.js':'app.js','/style.css':'style.css','/extras.js':'extras.js','/extras.css':'extras.css','/manifest.webmanifest':'manifest.webmanifest','/sw.js':'sw.js','/logo.svg':'logo.svg'};
   let file=files[p];if(!file)return fail(res,404,'صفحه یافت نشد');
   const mime={'html':'text/html; charset=utf-8','js':'application/javascript; charset=utf-8','css':'text/css; charset=utf-8','svg':'image/svg+xml','webmanifest':'application/manifest+json'};
   const ext=file.split('.').pop();
