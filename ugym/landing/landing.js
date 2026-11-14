@@ -119,7 +119,18 @@ $('coach-close').addEventListener('click',closeCoach);
 $('coach-form').addEventListener('submit',e=>{e.preventDefault();const input=$('coach-question');answer(input.value);input.value='';});
 document.querySelectorAll('[data-faq]').forEach(btn=>btn.addEventListener('click',()=>{openCoach();answer(btn.dataset.faq);}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCoach();$('install-modal').hidden=true}});
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+if('serviceWorker' in navigator){
+ let alreadyNotified=false;
+ function notifyUpgrade(){
+  if(alreadyNotified)return;alreadyNotified=true;
+  const bar=document.createElement('div');bar.className='ug-update-banner';
+  const title=document.createElement('span');title.textContent='✦ نسخه تازه UGYM آماده است';
+  const button=document.createElement('button');button.type='button';button.textContent='به‌روزرسانی ↻';button.addEventListener('click',()=>location.reload());
+  bar.append(title,button);document.body.append(bar);
+ }
+ navigator.serviceWorker.addEventListener('controllerchange',notifyUpgrade);
+ window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').then(reg=>reg.update()).catch(()=>{}));
+}
 
 const dailyTips=['کیفیت حرکت از تعداد تکرارها مهم‌تره.','آب کافی و ریکاوری مناسب بخش مهمی از تمرین هستند.','پیشرفت رو در طول چند هفته مقایسه کن، نه یک روز.','حرکات رو با تمرکز روی فرم درست انجام بده.','به بدن خودت گوش بده و شدت رو تدریجی بالا ببر.','پیش از تمرین بدن رو آماده کن؛ بعدش به ریکاوری اهمیت بده.','ثبات در تمرین از عجله برای نتیجه بهتره.'];
 const tip=$('ug-daily-tip');if(tip)tip.textContent=dailyTips[Math.floor((Date.now()+12600000)/86400000)%dailyTips.length];
