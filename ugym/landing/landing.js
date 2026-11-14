@@ -120,4 +120,31 @@ $('coach-form').addEventListener('submit',e=>{e.preventDefault();const input=$('
 document.querySelectorAll('[data-faq]').forEach(btn=>btn.addEventListener('click',()=>{openCoach();answer(btn.dataset.faq);}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCoach();$('install-modal').hidden=true}});
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+
+const dailyTips=['کیفیت حرکت از تعداد تکرارها مهم‌تره.','آب کافی و ریکاوری مناسب بخش مهمی از تمرین هستند.','پیشرفت رو در طول چند هفته مقایسه کن، نه یک روز.','حرکات رو با تمرکز روی فرم درست انجام بده.','به بدن خودت گوش بده و شدت رو تدریجی بالا ببر.','پیش از تمرین بدن رو آماده کن؛ بعدش به ریکاوری اهمیت بده.','ثبات در تمرین از عجله برای نتیجه بهتره.'];
+const tip=$('ug-daily-tip');if(tip)tip.textContent=dailyTips[Math.floor((Date.now()+12600000)/86400000)%dailyTips.length];
+const publicCard=$('public-card'),publicHolder=$('public-cardholder'),copyCard=$('public-card-copy'),publicWa=$('public-whatsapp');
+let cardNumber='5894631136176906',whatsapp='09171508927';
+function renderPublicPay(){
+ if(publicCard)publicCard.textContent=cardNumber.replace(/(.{4})/g,'$1 ').trim();
+ if(publicWa&&/^09\d{9}$/.test(whatsapp))publicWa.href='https://wa.me/98'+whatsapp.slice(1)+'?text='+encodeURIComponent('سلام، می‌خواهم رسید پرداخت شهریه UGYM را جهت بررسی برای شما بفرستم.');
+}
+renderPublicPay();
+copyCard?.addEventListener('click',async()=>{
+ try{await navigator.clipboard.writeText(cardNumber);copyCard.textContent='شماره کارت کپی شد ✓';}
+ catch{window.prompt('شماره کارت را از این کادر کپی کن',cardNumber);}
+});
+(async()=>{
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
+ try{
+  const res=await fetch('https://ugym-fitness-club-2026.onrender.com/api/public/payment-info',{credentials:'omit',cache:'no-store',signal:controller.signal});
+  if(!res.ok)return;
+  const data=await res.json(),p=data.payment;if(!p)return;
+  if(/^\d{16}$/.test(p.card_number))cardNumber=p.card_number;
+  if(/^09\d{9}$/.test(p.whatsapp))whatsapp=p.whatsapp;
+  if(publicHolder&&p.card_holder)publicHolder.textContent=String(p.card_holder).slice(0,100);
+  renderPublicPay();
+ }catch{}finally{clearTimeout(timer)}
+})();
+
 })();
