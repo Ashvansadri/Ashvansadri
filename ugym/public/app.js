@@ -86,10 +86,18 @@ function dailyTip(){
 }
 
 function renderAdminOverview(){
- const a=S.admin;let paid=Number(a.financial?.paid_total||0),pending=Number(a.financial?.pending_total||0);
- $('admin-view').innerHTML='<div class="welcome-banner"><span>CLUB INTELLIGENCE / LIVE</span><h2>کنترل کامل باشگاه، یک‌جا.</h2><p>ورزشکاران، کلاس‌ها، ثبت تغییرات بدن و شهریه‌ها را از یک مرکز مدیریت کن. همه تغییرات اینجا روی پایگاه داده باشگاه ثبت می‌شوند.</p></div>'+
- stats([['تعداد ورزشکاران',n(a.members.length),'حساب‌های ثبت‌شده'],['کلاس‌های فعال',n(a.classes.filter(x=>x.active).length),'چهار رشته تخصصی'],['دریافت‌های ثبت‌شده',money(paid),'جمع تراکنش‌های پرداخت‌شده'],['در انتظار وصول',money(pending),'بدهی‌های ثبت‌شده']])+
- '<div class="layout-two"><div class="dash-card"><div class="card-head"><h3>آخرین ورزشکاران</h3><button data-tab="members" class="action-link">مشاهده همه ←</button></div>'+(a.members.length?shortTableMembers(a.members.slice(0,6)):blank('هنوز ورزشکاری ثبت نشده است'))+'</div><div class="dash-card"><div class="card-head"><h3>آخرین شهریه‌ها</h3><button data-tab="payments" class="action-link">مشاهده مالی ←</button></div>'+(a.payments.length?'<div>'+a.payments.slice(0,6).map(x=>'<div class="selection-row"><div class="list-copy"><strong>'+h(x.full_name)+'</strong><small>'+when(x.created_at)+'</small></div><div class="list-copy"><strong>'+money(x.amount_toman)+'</strong>'+chip(x.status)+'</div></div>').join('')+'</div>':blank('شهریه‌ای ثبت نشده است'))+'</div></div>';
+ const a=S.admin,paid=Number(a.financial?.paid_total||0),pending=Number(a.financial?.pending_total||0);
+ const today=a.classes.filter(x=>x.active&&x.weekday===tehranDay()),notices=a.payments.filter(x=>x.status==='pending'&&x.receipt_declared_at);
+ $('admin-view').innerHTML='<div class="welcome-banner premium-welcome"><span>UGYM · CONTROL CENTER</span><h2>باشگاه، زیر نظر تو.</h2><p>امروز '+h(new Intl.DateTimeFormat('fa-IR',{dateStyle:'full',timeZone:'Asia/Tehran'}).format(new Date()))+' · اطلاعات این صفحه از سوابق ثبت‌شده باشگاه است.</p></div>'+
+ '<div class="admin-quickline"><button data-tab="members" class="quick-action"><b>＋</b><span>ثبت ورزشکار</span></button><button data-tab="payments" class="quick-action"><b>◈</b><span>ثبت شهریه</span></button><button data-tab="classes" class="quick-action"><b>▦</b><span>برنامه کلاس‌ها</span></button><button data-tab="settings" class="quick-action"><b>⚙</b><span>تنظیمات باشگاه</span></button></div>'+
+ stats([['ورزشکاران',n(a.members.length),'ثبت‌شده در سیستم'],['کلاس‌های فعال',n(a.classes.filter(x=>x.active).length),'برنامه ثبت‌شده'],['وصول شهریه',money(paid),'جمع تأییدشده'],['بدهی‌ها',money(pending),'در انتظار بررسی']])+
+ '<div class="layout-two"><div class="dash-card"><div class="card-head"><h3>کارهای امروز</h3><span class="pill">'+n(notices.length)+' اعلام رسید جدید</span></div>'+
+ (notices.length?notices.slice(0,6).map(x=>'<div class="selection-row"><span>'+h(x.full_name)+' · '+money(x.amount_toman)+'</span><button class="mini-btn" data-tab="payments">بررسی</button></div>').join(''):'<p class="tiny-muted">در حال حاضر رسید جدیدی برای بررسی اعلام نشده است.</p>')+
+ '<h4 class="subheading">برنامه ثبت‌شده امروز</h4>'+(today.length?today.map(x=>'<div class="selection-row"><span>'+h(x.title)+'</span><span>'+h(x.start_time)+'</span></div>').join(''):blank('امروز کلاسی ثبت نشده است'))+
+ '<p class="tiny-muted">زمان‌بندی کلاس‌ها باید توسط مدیریت تأیید شود.</p></div>'+
+ '<div class="dash-card"><h3>پیشنهاد امروز UGYM</h3><div class="today-tip">✧ '+h(dailyTip())+'</div><div class="manager-hint"><b>شروع سریع مدیریت</b><p>ورزشکار جدید را ثبت کن، سپس برای او شهریه و ارزیابی بدنی وارد کن.</p><button data-tab="members" class="btn btn-primary">ثبت ورزشکار ←</button></div></div></div>'+
+ '<div class="layout-two section-gap"><div class="dash-card"><div class="card-head"><h3>آخرین ورزشکاران</h3><button data-tab="members" class="action-link">همه ورزشکاران ←</button></div>'+(a.members.length?shortTableMembers(a.members.slice(0,5)):blank('هنوز ورزشکاری ثبت نشده'))+'</div>'+
+ '<div class="dash-card"><div class="card-head"><h3>آخرین شهریه‌ها</h3><button data-tab="payments" class="action-link">دفتر مالی ←</button></div>'+(a.payments.length?shortTablePayments(a.payments.slice(0,5)):blank('هنوز شهریه‌ای ثبت نشده'))+'</div></div>';
 }
 function chart(records,metric){
  const meta=label(metric),vals=records.filter(x=>x[metric]!==null&&x[metric]!==undefined).map(x=>({date:x.measured_at,val:Number(x[metric])}));
