@@ -158,4 +158,41 @@ copyCard?.addEventListener('click',async()=>{
  }catch{}finally{clearTimeout(timer)}
 })();
 
+
+/* Keep visitors inside branded UGYM UI until the Free backend wakes up. */
+const backendOrigin='https://ugym-fitness-club-2026.onrender.com';
+let navigating=false;
+function createOpenOverlay(target){
+ const el=document.createElement('div');el.className='ug-ready-overlay';el.setAttribute('role','status');el.setAttribute('aria-live','polite');
+ const content=document.createElement('div');content.className='ug-ready-content';
+ const mark=document.createElement('img');mark.src='/logo.svg';mark.alt='UGYM';mark.width=80;mark.height=80;
+ const spin=document.createElement('span');spin.className='ug-ready-spinner';spin.setAttribute('aria-hidden','true');
+ const title=document.createElement('h2');title.textContent='در حال آماده‌سازی پنل UGYM';
+ const explain=document.createElement('p');explain.textContent='درخواست اتصال به اطلاعات باشگاه در حال بررسی است.';
+ const cancel=document.createElement('button');cancel.type='button';cancel.className='ug-ready-cancel';cancel.textContent='بازگشت به سایت';cancel.onclick=()=>{navigating=false;el.remove();};
+ content.append(mark,spin,title,explain,cancel);el.append(content);document.body.append(el);
+ return {el,explain,content};
+}
+async function checkBackend(){
+ const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),8500);
+ try{const r=await fetch(backendOrigin+'/api/health',{mode:'cors',credentials:'omit',cache:'no-store',signal:ctrl.signal});if(!r.ok)return false;const j=await r.json();return j.ok===true;}
+ catch{return false;}finally{clearTimeout(timer);}
+}
+document.querySelectorAll('a[href^="'+backendOrigin+'"]').forEach(a=>a.addEventListener('click',async e=>{
+ if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey||e.button!==0||navigating)return;
+ e.preventDefault();navigating=true;
+ const target=a.href,ui=createOpenOverlay(target);
+ const deadline=Date.now()+96000;
+ let live=false;
+ while(navigating&&Date.now()<deadline){
+  if(await checkBackend()){live=true;break;}
+  if(Date.now()<deadline)await new Promise(resolve=>setTimeout(resolve,2400));
+ }
+ if(!navigating)return;
+ if(live){ui.explain.textContent='اتصال برقرار شد. در حال ورود به پنل...';window.location.assign(target);return;}
+ ui.explain.textContent='سرور رایگان هنوز آماده نشده است. می‌توانی مجدداً امتحان کنی یا مستقیم وارد شوی.';
+ const direct=document.createElement('a');direct.href=target;direct.textContent='ورود مستقیم به پنل ↗';direct.className='ug-ready-direct';ui.content.append(direct);
+ navigating=false;
+}));
+
 })();
