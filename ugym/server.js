@@ -114,6 +114,7 @@ async function handler(req,res){
       }
       const b=req.method==='POST'?await body(req):{};
       if(p==='/api/public/payment-info'&&req.method==='GET'){
+        res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Vary','Origin');
         const r=await pool.query('SELECT card_number,card_holder,whatsapp,updated_at FROM ug_club_settings WHERE id=1');
         if(!r.rows.length)return fail(res,503,'تنظیمات پرداخت هنوز ثبت نشده');
         return send(res,200,{payment:r.rows[0]});
