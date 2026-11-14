@@ -275,6 +275,17 @@ document.addEventListener('change',async function(ev){
  const t=ev.target.closest('[data-booking]');if(!t)return;
  try{await api('/api/admin/booking/status',{booking_id:Number(t.dataset.booking),status:t.value});flash('وضعیت حضور ذخیره شد');await loadAdmin();}catch(e){flash(e.message,true);}
 });
-if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));}
+if('serviceWorker' in navigator){
+ let alreadyNotified=false;
+ function notifyUpgrade(){
+  if(alreadyNotified)return;alreadyNotified=true;
+  const bar=document.createElement('div');bar.className='ug-update-banner';
+  const title=document.createElement('span');title.textContent='✦ نسخه تازه UGYM آماده است';
+  const button=document.createElement('button');button.type='button';button.textContent='به‌روزرسانی ↻';button.addEventListener('click',()=>location.reload());
+  bar.append(title,button);document.body.append(bar);
+ }
+ navigator.serviceWorker.addEventListener('controllerchange',notifyUpgrade);
+ window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').then(reg=>reg.update()).catch(()=>{}));
+}
 boot();
 })();
