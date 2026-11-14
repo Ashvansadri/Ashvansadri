@@ -38,3 +38,8 @@
 .public-payment-disclaimer{font-size:10px;line-height:2.1;color:#d1bedc;margin-top:18px}
 @media(max-width:850px){.public-finance{grid-template-columns:1fr;gap:35px;padding-block:80px}.finance-intro h2{font-size:50px}}
 @media(max-width:460px){.public-finance-card{padding:23px 17px;border-radius:23px}.public-bank-number{font-size:clamp(16px,5.4vw,23px);letter-spacing:0}.public-payment-actions{gap:8px}.public-payment-actions>*{font-size:10px;padding:11px 5px}.finance-intro h2{font-size:46px}}
+
+
+.ug-update-banner{position:fixed;z-index:100;bottom:82px;right:18px;max-width:calc(100% - 36px);display:flex;align-items:center;gap:16px;justify-content:space-between;background:#281b3a;color:#ffefff;border:1px solid #d2abe7;border-radius:15px;padding:12px 17px;font-family:Vazirmatn,Tahoma,sans-serif;font-size:12px;font-weight:700;box-shadow:0 18px 50px #0008}
+.ug-update-banner button{background:#ddbef5;color:#25152e;border:0;border-radius:10px;font-weight:800;font-size:11px;padding:10px 14px}
+@media(max-width:500px){.ug-update-banner{right:10px;bottom:90px;font-size:11px}}
