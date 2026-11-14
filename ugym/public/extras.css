@@ -6,3 +6,28 @@
 .ug-installhelp{position:fixed;inset:0;z-index:65;background:#000c;backdrop-filter:blur(7px);display:grid;place-items:center;padding:20px}.ug-installhelp>div{max-width:410px;width:100%;background:#211829;border:1px solid #bf9cd9;border-radius:24px;padding:31px;position:relative;text-align:center;box-shadow:0 25px 70px #000b}.ug-installhelp img{margin:auto}.ug-installhelp h3{font-size:20px;margin:13px 0}.ug-installhelp p{font-size:12px;line-height:2.2;color:#dccde6}.ug-installhelp #ug-helpok{background:#cfaef1;border:0;color:#23152c;font-size:12px;font-weight:800;border-radius:10px;padding:12px 22px;width:100%;margin-top:10px}.ug-x{position:absolute;top:7px;left:14px;border:0;background:transparent;color:white;font-size:27px}
 @media(max-width:700px){.ug-installbar{padding:6px 26px 6px 10px;gap:9px;justify-content:space-between;font-size:10px}.ug-installbar>button:not(.ug-installhide){padding:6px 9px;white-space:nowrap}.ug-installhide{left:2px}.ug-coachfloat{bottom:18px;left:16px;width:55px;height:55px;border-radius:16px}.ug-coachfloat img{border-radius:12px}.ug-coachbox{left:12px;bottom:81px;height:min(570px,calc(100dvh - 99px))}}
 @media(prefers-reduced-motion:reduce){.ug-coachfloat{transition:none}}
+
+/* UGYM 2.5 - actionable payment and club management */
+.premium-welcome{background:radial-gradient(ellipse at 96% 10%,#d0a2fc38,transparent 55%),linear-gradient(110deg,#291b3e,#111828);border:1px solid #c6a8e855;box-shadow:0 25px 65px #0004}
+.admin-quickline{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:0 0 23px}
+.quick-action{display:flex;align-items:center;gap:12px;min-height:73px;text-align:right;padding:14px 17px;border:1px solid #755d9b88;background:linear-gradient(145deg,#2b2142,#171a2c);border-radius:19px;color:#f6e8ff;font-size:12px;font-weight:800;box-shadow:0 12px 36px #0004;transition:transform .2s,border .2s}
+.quick-action:hover{transform:translateY(-3px);border-color:#dac3f0}.quick-action b{width:37px;height:37px;flex:0 0 37px;display:grid;place-items:center;border-radius:12px;background:#c39bf62b;color:#d9b5fa;font-size:21px}
+.today-tip{border:1px solid #ba9ed873;background:radial-gradient(circle at left top,#8a63c037,transparent 85%),#211b30;padding:25px 19px;border-radius:17px;color:#e6d6f7;min-height:104px;line-height:2;font-size:13px}
+.manager-hint{margin-top:19px;padding:16px 0}.manager-hint b{font-size:13px}.manager-hint p{color:#aaa1b8;font-size:11px;line-height:2;margin:8px 0 16px}
+.manager-hint button{padding:11px 18px}
+.bank-card{min-height:210px;border-radius:25px;position:relative;isolation:isolate;overflow:hidden;padding:26px 24px;border:1px solid #e0c1ff86;background:linear-gradient(140deg,#55376e,#281c42 53%,#1a2537);box-shadow:0 22px 55px #0007,inset 0 1px 1px #ffffff1c}
+.bank-card::before{content:'';position:absolute;z-index:-1;width:260px;height:260px;border:1px solid #d6b8ff3d;border-radius:50%;top:-145px;left:-40px;box-shadow:0 0 0 50px #d6b8ff13,0 0 0 110px #d6b8ff09}
+.bank-card::after{content:'✦';position:absolute;left:30px;bottom:18px;font-size:43px;color:#d1e9e04b;z-index:-1}
+.bank-card-kicker{display:flex;justify-content:space-between;gap:10px;align-items:center;color:#e8d6fa;font-size:11px;font-weight:700}.bank-card-kicker span:first-child{font:900 17px Arial;letter-spacing:2px}
+.bank-digits{font:700 clamp(16px,2.1vw,24px)/1.7 ui-monospace,Menlo,Consolas,monospace;text-align:center;letter-spacing:1.5px;white-space:nowrap;margin:19px 0 10px;text-shadow:0 5px 15px #0009}
+.bank-owner{font-size:14px;font-weight:700;color:#e9d8f4}
+.bank-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:17px}
+.bank-actions .mini-btn{border-color:#dbc6f05c;background:#221a34d6;color:#f7eafa}
+.invoice-item{border:1px solid #6a567a72;border-radius:17px;padding:17px;margin-bottom:14px;background:radial-gradient(circle at left bottom,#926fc221,transparent 60%),#1b182a}
+.invoice-heading{display:flex;flex-direction:column;gap:5px}.invoice-heading small{color:#a99bbf;font-size:10px}.invoice-heading b{font-size:23px;color:#ede0ff}.invoice-heading span{font-size:11px;color:#b6a9c7}
+.invoice-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}.invoice-actions a{background:#b69ae0;color:#291733;font-weight:800;border-color:#d9bcef;padding:9px 13px}
+.invoice-actions button{padding:9px 13px}.invoice-caption{font-size:10px;color:#afa2c0;line-height:2;margin:13px 0 0}
+.bank-card .mini-btn:focus-visible,.quick-action:focus-visible{outline:2px solid #e9d7ff;outline-offset:3px}
+#ug-audit-list{max-height:420px;overflow:auto}
+@media(max-width:1050px){.admin-quickline{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){.admin-quickline{gap:9px}.quick-action{padding:11px;min-height:58px;border-radius:14px;font-size:11px}.quick-action b{height:31px;width:31px;flex-basis:31px}.bank-card{min-height:190px;padding:20px 15px;border-radius:18px}.bank-digits{font-size:clamp(14px,4.1vw,21px);letter-spacing:.2px}.invoice-actions{flex-direction:column;align-items:stretch}.invoice-actions a,.invoice-actions button{text-align:center}.today-tip{font-size:12px}}
