@@ -186,10 +186,15 @@ function renderMemberClasses(){
  '<div class="dash-card section-gap"><h3>نوبت‌های من</h3>'+(mine.length?table(['کلاس','تاریخ','وضعیت','عملیات'],mine.map(x=>'<tr><td>'+h(x.title)+'</td><td>'+dt(x.class_date)+'</td><td>'+chip(x.status)+'</td><td>'+(x.status==='booked'?'<button class="mini-btn" data-cancel="'+x.id+'">لغو رزرو</button>':'—')+'</td></tr>')):blank('هنوز نوبتی رزرو نکرده‌اید'))+'</div>';
 }
 function renderMemberPayments(){
- const m=S.member;const settled=moneySum(m.payments,'paid'),due=moneySum(m.payments,'pending');
- $('member-view').innerHTML='<div class="welcome-banner"><span>MEMBERSHIP ACCOUNTING</span><h2>همه شهریه‌ها، شفاف و یک‌جا.</h2><p>تراکنش‌ها و مبالغ در انتظار پرداخت شما مستقیماً از ثبت‌های مدیر باشگاه نمایش داده می‌شوند.</p></div>'+
- stats([['مبالغ پرداخت‌شده',money(settled),'ثبت مدیر باشگاه'],['بدهی ثبت‌شده',money(due),'در انتظار تسویه'],['رکوردهای مالی',n(m.payments.length),'تاریخچه کامل']])+
- '<div class="dash-card"><h3>سوابق پرداخت من</h3>'+(m.payments.length?table(['مبلغ','وضعیت','روش','موعد','توضیح'],m.payments.map(x=>'<tr><td>'+money(x.amount_toman)+'</td><td>'+chip(x.status)+'</td><td>'+h(x.method)+'</td><td>'+dt(x.due_date)+'</td><td>'+h(x.note)+'</td></tr>')):blank('شهریه‌ای برای شما ثبت نشده است'))+'<p class="footnote">پرداخت اینترنتی در این نسخه فعال نیست. برای تسویه و دریافت رسید از باشگاه هماهنگ کنید.</p></div>';
+ const m=S.member,settled=moneySum(m.payments,'paid'),due=moneySum(m.payments,'pending');
+ const unpaid=m.payments.filter(x=>x.status==='pending');
+ const items=unpaid.map(x=>'<div class="invoice-item"><div class="invoice-heading"><small>شهریه شماره '+n(x.id)+'</small><b>'+money(x.amount_toman)+'</b><span>'+h(x.note||'شهریه باشگاه UGYM')+'</span></div><div class="invoice-actions"><a class="mini-btn" href="'+h(waHref(x))+'" target="_blank" rel="noopener noreferrer">ارسال رسید در واتساپ ↗</a><button type="button" class="mini-btn" data-receipt="'+x.id+'" '+(x.receipt_declared_at?'disabled':'')+'>'+(x.receipt_declared_at?'رسید اعلام شده':'رسید را ارسال کردم ✓')+'</button></div><p class="invoice-caption">'+(x.receipt_declared_at?'منتظر بررسی و تأیید مدیریت':'بعد از ارسال تصویر رسید در واتساپ، اعلام ارسال را ثبت کن')+'</p></div>').join('');
+ const rows=m.payments.map(x=>'<tr><td>'+money(x.amount_toman)+'</td><td>'+chip(x.status)+(x.receipt_declared_at&&x.status==='pending'?'<br><span class="pill amber">در انتظار تأیید رسید</span>':'')+'</td><td>'+dt(x.due_date)+'</td><td>'+h(x.method)+'</td><td>'+h(x.note)+'</td></tr>');
+ $('member-view').innerHTML='<div class="welcome-banner premium-welcome"><span>UGYM · PAYMENTS</span><h2>شهریه‌های من</h2><p>مبالغ، تاریخچه و وضعیت بررسی پرداخت‌ها را به‌صورت شفاف ببین.</p></div>'+
+ stats([['پرداخت‌های تأییدشده',money(settled),'وصول‌شده توسط مدیریت'],['بدهی',money(due),'در انتظار پرداخت یا بررسی'],['تعداد سوابق',n(m.payments.length),'شهریه‌های ثبت‌شده']])+
+ '<div class="layout-equal"><div class="dash-card"><h3>پرداخت کارت‌به‌کارت</h3>'+cardBlock()+'<p class="footnote">پس از واریز، تصویر رسید را به‌صورت دستی در واتساپ باشگاه پیوست و ارسال کن. بازکردن واتساپ به معنی پرداخت نیست.</p></div>'+
+ '<div class="dash-card"><h3>شهریه‌های باز</h3>'+(unpaid.length?items:blank('در حال حاضر بدهی ثبت‌شده‌ای نداری'))+'</div></div>'+
+ '<div class="dash-card section-gap"><h3>سوابق شهریه‌ها</h3>'+(rows.length?table(['مبلغ','وضعیت','سررسید','روش','شرح'],rows):blank('هنوز شهریه‌ای ثبت نشده است'))+'</div>';
 }
 function renderMember(){
  const heads={progress:'مسیر پیشرفت من',classes:'رزرو و برنامه کلاس‌ها',payments:'شهریه‌ها و پرداخت‌ها'};
