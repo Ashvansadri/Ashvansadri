@@ -61,7 +61,7 @@ function validEmail(v){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)&&v.length<=18
 function userOut(u){return {id:u.id,role:u.role,full_name:u.full_name,email:u.email,username:u.username||null,discipline:u.discipline,goal:u.goal,height_cm:u.height_cm,created_at:u.created_at};}
 function cookie(req){let v=req.headers.cookie||'';let m=v.match(/(?:^|;\s*)ugym_session=([^;]+)/);return m?.[1]||'';}
 async function auth(req){let tok=cookie(req);if(!/^[a-f0-9]{64}$/.test(tok))return null;const r=await pool.query('SELECT u.id,u.role,u.full_name,u.email,u.username,u.discipline,u.goal,u.height_cm,u.created_at FROM ug_sessions s JOIN ug_users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>NOW()',[hash(tok)]);return r.rows[0]||null;}
-async function session(res,userId){let tok=crypto.randomBytes(32).toString('hex');await pool.query("INSERT INTO ug_sessions(token_hash,user_id,expires_at) VALUES($1,$2,NOW()+INTERVAL '14 days')",[hash(tok),userId]);res.setHeader('Set-Cookie', 'ugym_session='+tok+'; Path=/; Max-Age=1209600; HttpOnly; Secure; SameSite=Strict');}
+async function session(res,userId){let tok=crypto.randomBytes(32).toString('hex');await pool.query("INSERT INTO ug_sessions(token_hash,user_id,expires_at) VALUES($1,$2,NOW()+INTERVAL '14 days')",[hash(tok),userId]);res.setHeader('Set-Cookie', 'ugym_session='+tok+'; Path=/; Max-Age=1209600; HttpOnly; Secure; SameSite=Lax');}
 const positive=(x,max)=>Number.isFinite(Number(x))&&Number(x)>=0&&Number(x)<=max;
 const value=(x,max)=>x===''||x==null?null:positive(x,max)?Number(x):undefined;
 const idok=(x)=>Number.isSafeInteger(Number(x))&&Number(x)>0;
@@ -96,7 +96,7 @@ async function handler(req,res){
   res.setHeader('X-Frame-Options','DENY');
   res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');
   res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');
-  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; img-src 'self' data: https://images.unsplash.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'");
+  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; img-src 'self' data: https://images.unsplash.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
   const ip=req.socket.remoteAddress||'unknown';
   if(limit(ip))return fail(res,429,'درخواست بیش از حد؛ کمی بعد تلاش کنید');
   const url=new URL(req.url,'http://localhost'),p=url.pathname;
@@ -158,7 +158,7 @@ async function handler(req,res){
       }
       if(p==='/api/auth/logout'&&req.method==='POST'){
         if(cookie(req))await pool.query('DELETE FROM ug_sessions WHERE token_hash=$1',[hash(cookie(req))]);
-        res.setHeader('Set-Cookie','ugym_session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict');return send(res,200,{ok:true});
+        res.setHeader('Set-Cookie','ugym_session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax');return send(res,200,{ok:true});
       }
       if(p==='/api/classes'&&req.method==='GET'){const r=await pool.query('SELECT * FROM ug_classes WHERE active=TRUE ORDER BY weekday,start_time');return send(res,200,{classes:r.rows});}
       if(p==='/api/me'&&req.method==='GET'){const u=await auth(req);return send(res,200,{user:u?userOut(u):null});}
