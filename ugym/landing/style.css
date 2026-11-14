@@ -43,3 +43,14 @@
 .ug-update-banner{position:fixed;z-index:100;bottom:82px;right:18px;max-width:calc(100% - 36px);display:flex;align-items:center;gap:16px;justify-content:space-between;background:#281b3a;color:#ffefff;border:1px solid #d2abe7;border-radius:15px;padding:12px 17px;font-family:Vazirmatn,Tahoma,sans-serif;font-size:12px;font-weight:700;box-shadow:0 18px 50px #0008}
 .ug-update-banner button{background:#ddbef5;color:#25152e;border:0;border-radius:10px;font-weight:800;font-size:11px;padding:10px 14px}
 @media(max-width:500px){.ug-update-banner{right:10px;bottom:90px;font-size:11px}}
+
+/* Free backend readiness remains on the UGYM-branded page */
+.ug-ready-overlay{position:fixed;inset:0;z-index:200;background:radial-gradient(circle at 50% 42%,#64478d77,#080812 60%);display:grid;place-items:center;padding:20px;backdrop-filter:blur(14px)}
+.ug-ready-content{text-align:center;border:1px solid #baa3d675;background:linear-gradient(145deg,#281d3a,#10121e);border-radius:30px;box-shadow:0 25px 100px #000a;padding:36px 25px;width:min(430px,100%);display:flex;align-items:center;flex-direction:column;gap:14px}
+.ug-ready-content img{filter:drop-shadow(0 10px 17px #af83f665)}
+.ug-ready-spinner{display:block;width:43px;height:43px;border:3px solid #bca7e24a;border-top-color:#e9c7ff;border-radius:50%;animation:ug-ready-spin .9s linear infinite}
+@keyframes ug-ready-spin{to{transform:rotate(360deg)}}
+.ug-ready-content h2{font-size:22px;margin:5px 0 0}.ug-ready-content p{font-size:12px;color:#d0c1de;line-height:2;margin:0}
+.ug-ready-cancel,.ug-ready-direct{border:1px solid #d1b4e8;border-radius:13px;background:#bfa0e9;color:#24152f;padding:12px 22px;font-weight:800;font-size:12px;min-width:195px;text-align:center}
+.ug-ready-cancel{background:transparent;color:#e8d6f6}
+@media(prefers-reduced-motion:reduce){.ug-ready-spinner{animation:none;border-top-color:#fff}}
