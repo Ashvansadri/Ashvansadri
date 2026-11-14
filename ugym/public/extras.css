@@ -31,3 +31,8 @@
 #ug-audit-list{max-height:420px;overflow:auto}
 @media(max-width:1050px){.admin-quickline{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:680px){.admin-quickline{gap:9px}.quick-action{padding:11px;min-height:58px;border-radius:14px;font-size:11px}.quick-action b{height:31px;width:31px;flex-basis:31px}.bank-card{min-height:190px;padding:20px 15px;border-radius:18px}.bank-digits{font-size:clamp(14px,4.1vw,21px);letter-spacing:.2px}.invoice-actions{flex-direction:column;align-items:stretch}.invoice-actions a,.invoice-actions button{text-align:center}.today-tip{font-size:12px}}
+
+
+.ug-update-banner{position:fixed;z-index:100;bottom:82px;right:18px;max-width:calc(100% - 36px);display:flex;align-items:center;gap:16px;justify-content:space-between;background:#281b3a;color:#ffefff;border:1px solid #d2abe7;border-radius:15px;padding:12px 17px;font-family:Vazirmatn,Tahoma,sans-serif;font-size:12px;font-weight:700;box-shadow:0 18px 50px #0008}
+.ug-update-banner button{background:#ddbef5;color:#25152e;border:0;border-radius:10px;font-weight:800;font-size:11px;padding:10px 14px}
+@media(max-width:500px){.ug-update-banner{right:10px;bottom:90px;font-size:11px}}
