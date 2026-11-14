@@ -165,6 +165,7 @@ function renderAdminSettings(){
  '<div class="layout-equal"><div class="dash-card"><h3>اطلاعات مالی و واتساپ</h3><form data-form="settings"><label>شماره کارت مقصد (۱۶ رقم)</label><input name="card_number" inputmode="numeric" maxlength="24" required value="'+h(p.card_number)+'"><label>نام صاحب کارت</label><input name="card_holder" maxlength="100" required value="'+h(p.card_holder)+'"><label>شماره واتساپ دریافت رسید</label><input name="whatsapp" inputmode="tel" maxlength="16" required value="'+h(p.whatsapp)+'"><div class="form-row"><button type="submit" class="btn btn-primary">ذخیره تغییرات ←</button></div></form></div>'+
  '<div class="dash-card"><h3>پیش‌نمایش کارت</h3>'+cardBlock()+'<div class="note-card"><strong>حفظ امنیت مالی</strong><p>رسید واتساپ فقط اعلام پرداخت است. تأیید وصول را پس از بررسی تراکنش واقعی بانک انجام بده.</p></div></div></div>'+
  '<div class="dash-card section-gap"><h3>فعالیت‌های اخیر مدیریت</h3><div id="ug-audit-list">'+blank('در حال دریافت سوابق...')+'</div></div>';
+ $('admin-view').insertAdjacentHTML('beforeend','<div class="dash-card section-gap"><h3>امنیت حساب مدیر</h3><form data-form="password"><div class="field-grid"><div><label>رمز عبور فعلی</label><input type="password" name="current_password" autocomplete="current-password" required></div><div><label>رمز جدید (حداقل ۱۲ کاراکتر)</label><input type="password" name="new_password" minlength="12" autocomplete="new-password" required></div></div><div class="form-row"><button type="submit" class="btn btn-primary">تغییر رمز و خروج سایر نشست‌ها ←</button></div></form><p class="footnote">رمز جدید را در اختیار دیگران نگذار و برای هر مدیر از حساب امن استفاده کن.</p></div>');
  api('/api/admin/audit').then(data=>{const box=$('ug-audit-list');if(!box)return;const titles={payment_created:'ثبت شهریه',payment_status_changed:'تأیید یا تغییر شهریه',receipt_notice:'اعلام ارسال رسید',member_created:'ثبت ورزشکار',member_updated:'ویرایش ورزشکار',assessment_added:'ثبت ارزیابی',class_created:'ثبت کلاس',settings_changed:'تغییر تنظیمات'};
  box.innerHTML=data.logs.length?table(['اقدام','شناسه ثبت','تاریخ'],data.logs.map(x=>'<tr><td>'+h(titles[x.action]||x.action)+'</td><td>'+n(x.record_id)+'</td><td>'+when(x.created_at)+'</td></tr>')):blank('سابقه‌ای ثبت نشده است');}).catch(()=>{const box=$('ug-audit-list');if(box)box.innerHTML=blank('دریافت گزارش ممکن نشد')});
 }
@@ -209,11 +210,18 @@ function renderMemberPayments(){
  '<div class="dash-card"><h3>شهریه‌های باز</h3>'+(unpaid.length?items:blank('در حال حاضر بدهی ثبت‌شده‌ای نداری'))+'</div></div>'+
  '<div class="dash-card section-gap"><h3>سوابق شهریه‌ها</h3>'+(rows.length?table(['مبلغ','وضعیت','سررسید','روش','شرح'],rows):blank('هنوز شهریه‌ای ثبت نشده است'))+'</div>';
 }
+function renderMemberAccount(){
+ const m=S.member;
+ $('member-view').innerHTML='<div class="welcome-banner premium-welcome"><span>UGYM · MEMBER SECURITY</span><h2>حساب شخصی من</h2><p>اطلاعات بدنی و شهریه‌ها متعلق به حساب تو هستند.</p></div>'+
+ '<div class="layout-equal"><div class="dash-card"><h3>پروفایل ورزشکار</h3><div class="selection-row"><span>نام</span><strong>'+h(m.user.full_name)+'</strong></div><div class="selection-row"><span>ایمیل ورود</span><strong>'+h(m.user.email)+'</strong></div><div class="selection-row"><span>رشته اصلی</span><strong>'+h(m.user.discipline)+'</strong></div><p class="footnote">برای تغییر نام یا رشته با مدیریت باشگاه هماهنگ کن.</p></div>'+
+ '<div class="dash-card"><h3>تغییر رمز عبور</h3><form data-form="password"><label>رمز فعلی</label><input name="current_password" type="password" autocomplete="current-password" required><label>رمز جدید (حداقل ۱۲ کاراکتر)</label><input name="new_password" type="password" autocomplete="new-password" minlength="12" required><div class="form-row"><button class="btn btn-primary" type="submit">ثبت رمز جدید ←</button></div></form></div></div>';
+}
 function renderMember(){
- const heads={progress:'مسیر پیشرفت من',classes:'رزرو و برنامه کلاس‌ها',payments:'شهریه‌ها و پرداخت‌ها'};
+ const heads={progress:'مسیر پیشرفت من',classes:'رزرو و برنامه کلاس‌ها',payments:'شهریه‌ها و پرداخت‌ها',account:'تنظیمات حساب'};
  $('member-heading').textContent=heads[S.memberTab];setActive('#member-nav [data-member-tab]','memberTab',S.memberTab);
  if(S.memberTab==='progress')renderMemberProgress();
  else if(S.memberTab==='classes')renderMemberClasses();
+ else if(S.memberTab==='account')renderMemberAccount();
  else renderMemberPayments();
 }
 async function loadMember(){const [member,config]=await Promise.all([api('/api/member/dashboard'),api('/api/public/payment-info')]);S.member=member;S.payConfig=config.payment;renderMember();}
@@ -234,7 +242,7 @@ document.addEventListener('submit',async function(ev){
  const routes={login:'/api/auth/login',register:'/api/auth/register',setup:'/api/bootstrap','member-create':'/api/admin/member/create','person-update':'/api/admin/member/update',measurement:'/api/admin/measurement',payment:'/api/admin/payment',settings:'/api/admin/settings',class:'/api/admin/class','class-update':'/api/admin/class/update',password:'/api/account/change-password'};
  let b=form.querySelector('[type=submit]');if(b)b.disabled=true;
  try{const saved=await api(routes[kind],d);if(['login','register','setup'].includes(kind)){if(kind==='login'){const x=await api('/api/me');location.assign(x.user?.role==='admin'?'/admin':'/member');}else{if(kind==='setup'){try{sessionStorage.removeItem('ugym_owner_invite');}catch{}}location.assign(kind==='setup'?'/admin':'/member');}return;}
- flash('اطلاعات با موفقیت ذخیره شد');if(kind==='member-create'||kind==='measurement'||kind==='payment'||kind==='class'||kind==='password')form.reset();if(kind==='member-create'){S.tab='members';S.selected=saved.id;}await loadAdmin();if(kind==='member-create'&&$('person-detail'))$('person-detail').scrollIntoView({behavior:'smooth',block:'start'});
+ flash('اطلاعات با موفقیت ذخیره شد');if(kind==='member-create'||kind==='measurement'||kind==='payment'||kind==='class'||kind==='password')form.reset();if(kind==='member-create'){S.tab='members';S.selected=saved.id;}if(S.user?.role==='member'){await loadMember();}else{await loadAdmin();}if(kind==='member-create'&&$('person-detail'))$('person-detail').scrollIntoView({behavior:'smooth',block:'start'});
  }catch(e){if(form.id==='auth-form'){$('auth-error').textContent=e.message;$('auth-error').hidden=false;}else flash(e.message,true);}finally{if(b)b.disabled=false;}
 });
 document.addEventListener('click',async function(ev){
