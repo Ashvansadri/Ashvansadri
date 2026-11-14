@@ -162,7 +162,18 @@ async function handler(req,res){
       if(p==='/api/classes'&&req.method==='GET'){const r=await pool.query('SELECT * FROM ug_classes WHERE active=TRUE ORDER BY weekday,start_time');return send(res,200,{classes:r.rows});}
       if(p==='/api/me'&&req.method==='GET'){const u=await auth(req);return send(res,200,{user:u?userOut(u):null});}
       const u=await auth(req);if(!u)return fail(res,401,'ابتدا وارد حساب شوید');
-      if(p==='/api/member/dashboard'&&req.method==='GET'){
+      if(p==='/api/account/change-password'&&req.method==='POST'){
+        const oldPassword=String(b.current_password||''),newPassword=String(b.new_password||'');
+        if(newPassword.length<12||newPassword.length>128||oldPassword===newPassword)return fail(res,400,'رمز جدید باید حداقل ۱۲ کاراکتر و متفاوت با رمز قبلی باشد');
+        const entry=await pool.query("SELECT password_hash FROM ug_users WHERE id=$1",[u.id]);
+        if(!entry.rows.length||!pwCheck(oldPassword,entry.rows[0].password_hash))return fail(res,403,'رمز فعلی صحیح نیست');
+        await pool.query("UPDATE ug_users SET password_hash=$2 WHERE id=$1",[u.id,pwHash(newPassword)]);
+        await pool.query('DELETE FROM ug_sessions WHERE user_id=$1 AND token_hash<>$2',[u.id,hash(cookie(req))]);
+        await audit(u.id,'password_changed',u.id);
+        return send(res,200,{ok:true});
+      }
+            if(p==='/api/member/dashboard'&&req.method==='GET'){
+
         if(!isRole(u,'member'))return fail(res,403,'این بخش مخصوص ورزشکار است');
         const [measurements,payments,bookings]=await Promise.all([
           pool.query('SELECT * FROM ug_measurements WHERE user_id=$1 ORDER BY measured_at ASC,id ASC LIMIT 300',[u.id]),
@@ -248,7 +259,17 @@ async function handler(req,res){
         if(!idok(b.payment_id)||!['paid','pending'].includes(b.status))return fail(res,400,'درخواست نامعتبر');
         const r=await pool.query("UPDATE ug_payments SET status=$2,paid_at=CASE WHEN $2='paid' THEN COALESCE(paid_at,NOW()) ELSE NULL END WHERE id=$1 AND status<>$2 RETURNING id",[b.payment_id,b.status]);if(r.rowCount)await audit(u.id,'payment_status_changed',Number(b.payment_id),{to:b.status});return send(res,200,{ok:r.rowCount>0});
       }
-      if(p==='/api/admin/class'&&req.method==='POST'){
+      if(p==='/api/admin/class/update'&&req.method==='POST'){
+        const id=Number(b.class_id),discipline=clean(b.discipline,40),title=clean(b.title,120),coach=clean(b.coach,120);
+        const weekday=Number(b.weekday),start_time=clean(b.start_time,5),duration=Number(b.duration_min),capacity=Number(b.capacity),price=Number(b.price_toman||0);
+        const active=String(b.active)==='true';
+        if(!idok(id)||!['پیلاتس','ایروبیک','بدنسازی','TRX'].includes(discipline)||title.length<3||coach.length<2||!Number.isInteger(weekday)||weekday<0||weekday>6||!/^\d{2}:\d{2}$/.test(start_time)||Number(start_time.slice(0,2))>23||Number(start_time.slice(3))>59||!Number.isInteger(duration)||duration<15||duration>180||!Number.isInteger(capacity)||capacity<1||capacity>100||!Number.isSafeInteger(price)||price<0||price>1e12)return fail(res,400,'اطلاعات کلاس برای ویرایش معتبر نیست');
+        const r=await pool.query('UPDATE ug_classes SET discipline=$2,title=$3,coach=$4,weekday=$5,start_time=$6,duration_min=$7,capacity=$8,price_toman=$9,active=$10 WHERE id=$1 RETURNING id',[id,discipline,title,coach,weekday,start_time,duration,capacity,price,active]);
+        if(!r.rowCount)return fail(res,404,'کلاس پیدا نشد');
+        await audit(u.id,'class_updated',id,{active,discipline});return send(res,200,{ok:true,id});
+      }
+            if(p==='/api/admin/class'&&req.method==='POST'){
+
         const discipline=clean(b.discipline,40),title=clean(b.title,120),coach=clean(b.coach,120),start_time=clean(b.start_time,5),weekday=Number(b.weekday),capacity=Number(b.capacity),duration=Number(b.duration_min);
         if(!['پیلاتس','ایروبیک','بدنسازی','TRX'].includes(discipline)||title.length<3||coach.length<2||!Number.isInteger(weekday)||weekday<0||weekday>6||!/^\d{2}:\d{2}$/.test(start_time)||Number(start_time.slice(0,2))>23||Number(start_time.slice(3))>59||!Number.isInteger(capacity)||capacity<1||capacity>100||!Number.isInteger(duration)||duration<15||duration>180)return fail(res,400,'اطلاعات کلاس معتبر نیست');
         const r=await pool.query('INSERT INTO ug_classes(discipline,title,coach,weekday,start_time,duration_min,capacity) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id',[discipline,title,coach,weekday,start_time,duration,capacity]);await audit(u.id,'class_created',Number(r.rows[0].id),{discipline});return send(res,201,{ok:true,id:r.rows[0].id});
