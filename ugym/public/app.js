@@ -1,7 +1,7 @@
 'use strict';
 (function(){
 const $=(id)=>document.getElementById(id);
-const S={user:null,classes:[],admin:null,member:null,person:null,selected:null,tab:'overview',memberTab:'progress',metric:'weight_kg'};
+const S={user:null,classes:[],admin:null,member:null,person:null,selected:null,tab:'overview',memberTab:'progress',metric:'weight_kg',payConfig:{card_number:'5894631136176906',card_holder:'زهره صابری',whatsapp:'09171508927'}};
 const DISC=['بدنسازی','پیلاتس','ایروبیک','TRX'];
 const DAYS=['یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنجشنبه','جمعه','شنبه'];
 const METRICS=[['weight_kg','وزن','کیلوگرم'],['body_fat_pct','چربی بدن','٪'],['waist_cm','دور کمر','سانتی‌متر'],['performance_score','شاخص عملکرد','امتیاز']];
@@ -64,6 +64,27 @@ function authPage(mode){
   api('/api/bootstrap-status').then(x=>{if(!x.needs_setup){$('auth-error').textContent='حساب مدیریت قبلاً ساخته شده است. از صفحه ورود استفاده کن.';$('auth-error').hidden=false;$('auth-submit').disabled=true;}}).catch(e=>flash(e.message,true));
  }
 }
+
+function waHref(x){
+ const phone=String(S.payConfig.whatsapp||'').replace(/\D/g,'');
+ if(!/^09\d{9}$/.test(phone))return '';
+ const msg=x?'سلام، رسید پرداخت شهریه UGYM به مبلغ '+money(x.amount_toman)+' را ارسال می‌کنم. شناسه شهریه: '+x.id+'. نام ورزشکار: '+String(S.member?.user?.full_name||'')+'. لطفاً پس از بررسی واریز تأیید کنید.':'سلام، برای دریافت راهنمای پرداخت شهریه UGYM پیام می‌دهم.';
+ return 'https://wa.me/98'+phone.slice(1)+'?text='+encodeURIComponent(msg);
+}
+function cardBlock(){
+ const p=S.payConfig,number=String(p.card_number||'').replace(/\D/g,'');
+ const numberFormatted=number.replace(/(.{4})/g,'$1 ').trim();
+ return '<div class="bank-card"><div class="bank-card-kicker"><span>✦ UGYM</span><span>کارت مقصد شهریه</span></div><div class="bank-digits" dir="ltr">'+h(numberFormatted)+'</div><div class="bank-owner">'+h(p.card_holder||'')+'</div><div class="bank-actions"><button type="button" data-copy-card class="mini-btn">کپی شماره کارت</button>'+(waHref(null)?'<a class="mini-btn" href="'+h(waHref(null))+'" target="_blank" rel="noopener noreferrer">واتساپ باشگاه ↗</a>':'')+'</div></div>';
+}
+function tehranDay(){
+ const d=new Intl.DateTimeFormat('en-US',{weekday:'short',timeZone:'Asia/Tehran'}).format(new Date());
+ return ({Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6})[d]??0;
+}
+function dailyTip(){
+ const tips=['امروز روی اجرای درست حرکات تمرکز کن؛ کیفیت مهم‌تر از سرعت است.','آب کافی و استراحت مناسب بخشی از برنامه تمرین هستند.','پیشرفت را با روند چند هفته‌ای بسنج، نه یک عدد در یک روز.','قبل از شروع تمرین، چند دقیقه بدن را آماده حرکت کن.','شدت تمرین را متناسب با آمادگی و نظر مربی تنظیم کن.','حرکت درست و قابل‌کنترل بهتر از فشار ناگهانی است.','ثبت ارزیابی منظم دید دقیق‌تری از مسیر پیشرفت می‌دهد.'];
+ return tips[Math.floor((Date.now()+12600000)/86400000)%tips.length];
+}
+
 function renderAdminOverview(){
  const a=S.admin;let paid=Number(a.financial?.paid_total||0),pending=Number(a.financial?.pending_total||0);
  $('admin-view').innerHTML='<div class="welcome-banner"><span>CLUB INTELLIGENCE / LIVE</span><h2>کنترل کامل باشگاه، یک‌جا.</h2><p>ورزشکاران، کلاس‌ها، ثبت تغییرات بدن و شهریه‌ها را از یک مرکز مدیریت کن. همه تغییرات اینجا روی پایگاه داده باشگاه ثبت می‌شوند.</p></div>'+
