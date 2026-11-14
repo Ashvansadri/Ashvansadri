@@ -103,7 +103,7 @@ async function handler(req,res){
   const iconMatch=p.match(/^\/icon-(192|512)\.png$/);if(req.method==='GET'&&iconMatch){const bytes=iconPng(Number(iconMatch[1]));res.writeHead(200,{'Content-Type':'image/png','Content-Length':bytes.length,'Cache-Control':'public,max-age=86400'});res.end(bytes);return;}
   if(!DB_READY&&p==='/api/me'&&req.method==='GET')return send(res,200,{user:null});
   if(!DB_READY&&p.startsWith('/api/'))return fail(res,503,'پایگاه داده هنوز به Render متصل نشده است');
-  if(req.method==='GET'&&p==='/api/health'){try{await pool.query('SELECT 1');return send(res,200,{ok:true,time:now()});}catch{return fail(res,503,'پایگاه داده در دسترس نیست');}}
+  if(req.method==='GET'&&p==='/api/health'){res.setHeader('Access-Control-Allow-Origin','*');try{await pool.query('SELECT 1');return send(res,200,{ok:true,time:now()});}catch{return fail(res,503,'پایگاه داده در دسترس نیست');}}
   if(p.startsWith('/api/')){
     try{
       if(!['GET','POST'].includes(req.method))return fail(res,405,'روش درخواست مجاز نیست');
