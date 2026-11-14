@@ -132,9 +132,21 @@ function renderPersonDetail(){
  '<div class="dash-card section-gap"><h3>ثبت شهریه یا بدهی</h3><form data-form="payment"><input name="user_id" type="hidden" value="'+u.id+'"><div class="field-grid cols4"><div><label>مبلغ (تومان)</label><input type="number" min="1" step="1" max="1000000000000" name="amount_toman" required placeholder="مثلاً 1500000"></div><div><label>وضعیت</label><select name="status"><option value="pending">در انتظار پرداخت</option><option value="paid">پرداخت‌شده</option></select></div><div><label>روش</label><select name="method"><option>کارت‌به‌کارت</option><option>نقدی</option><option>انتقال بانکی</option><option>کارتخوان</option></select></div><div><label>موعد پرداخت (اختیاری)</label><input type="date" name="due_date"></div></div><label>شرح</label><input name="note" placeholder="مثلاً شهریه دوره آبان"><div class="form-row"><button class="btn btn-primary" type="submit">ثبت در دفتر مالی ←</button></div></form></div>';
 }
 function renderAdminClasses(){
- let a=S.admin;
- let rows=a.classes.map(c=>'<tr><td>'+h(c.title)+'</td><td>'+h(c.discipline)+'</td><td>'+h(DAYS[c.weekday])+' '+h(c.start_time)+'</td><td>'+h(c.coach)+'</td><td>'+n(c.capacity)+'</td></tr>');
- $('admin-view').innerHTML='<div class="layout-two"><div class="dash-card"><h3>برنامه کلاس‌های باشگاه</h3>'+table(['کلاس','رشته','روز و ساعت','مربی','ظرفیت'],rows)+'</div><div class="dash-card"><h3>تعریف کلاس جدید</h3><form data-form="class"><div class="field-grid"><div><label>رشته</label>'+sportSelect('پیلاتس')+'</div><div><label>عنوان کلاس</label><input name="title" required placeholder="عنوان کلاس"></div><div><label>نام مربی</label><input name="coach" required placeholder="نام مربی"></div><div><label>روز هفته</label><select name="weekday">'+DAYS.map((d,i)=>'<option value="'+i+'">'+h(d)+'</option>').join('')+'</select></div><div><label>ساعت</label><input name="start_time" type="time" value="18:00" required></div><div><label>مدت (دقیقه)</label><input type="number" name="duration_min" min="15" max="180" value="60" required></div><div><label>ظرفیت</label><input name="capacity" type="number" min="1" max="100" value="14" required></div></div><div class="form-row"><button type="submit" class="btn btn-primary">افزودن کلاس ←</button></div></form></div></div>';
+ const a=S.admin,choices=a.classes.map(x=>'<option value="'+x.id+'">'+h(x.title)+' · '+h(DAYS[x.weekday])+'</option>').join('');
+ const rows=a.classes.map(x=>'<tr><td>'+h(x.title)+'</td><td>'+h(x.discipline)+'</td><td>'+h(DAYS[x.weekday])+' '+h(x.start_time)+'</td><td>'+h(x.coach)+'</td><td>'+n(x.capacity)+'</td><td>'+chip(x.active?'فعال':'غیرفعال')+'</td></tr>');
+ const weekday=DAYS.map((x,i)=>'<option value="'+i+'">'+h(x)+'</option>').join('');
+ $('admin-view').innerHTML='<div class="dash-card"><div class="card-head"><h3>کلاس‌های UGYM</h3><span class="pill">'+n(a.classes.length)+' کلاس ثبت‌شده</span></div>'+table(['کلاس','رشته','روز و ساعت','مربی','ظرفیت','وضعیت'],rows)+'<p class="footnote">برنامه‌های اولیه نمونه هستند؛ روز، ساعت و مربی واقعی را در فرم ویرایش تعیین کن.</p></div>'+
+ '<div class="layout-equal section-gap"><div class="dash-card"><h3>کلاس جدید</h3><form data-form="class"><div class="field-grid"><div><label>رشته</label>'+sportSelect('پیلاتس')+'</div><div><label>عنوان کلاس</label><input name="title" required placeholder="نام کلاس"></div><div><label>مربی</label><input name="coach" required placeholder="نام مربی"></div><div><label>روز هفته</label><select name="weekday">'+weekday+'</select></div><div><label>ساعت</label><input name="start_time" type="time" value="18:00" required></div><div><label>مدت (دقیقه)</label><input type="number" name="duration_min" min="15" max="180" value="60" required></div><div><label>ظرفیت</label><input name="capacity" type="number" min="1" max="100" value="14" required></div></div><div class="form-row"><button type="submit" class="btn btn-primary">افزودن کلاس ←</button></div></form></div>'+
+ '<div class="dash-card"><h3>ویرایش کلاس موجود</h3>'+(a.classes.length?'<form data-form="class-update"><label>انتخاب کلاس</label><select name="class_id" data-class-select>'+choices+'</select><div class="field-grid"><div><label>رشته</label>'+sportSelect(a.classes[0].discipline)+'</div><div><label>عنوان کلاس</label><input name="title" required></div><div><label>مربی</label><input name="coach" required></div><div><label>روز هفته</label><select name="weekday">'+weekday+'</select></div><div><label>ساعت</label><input name="start_time" type="time" required></div><div><label>مدت (دقیقه)</label><input type="number" name="duration_min" min="15" max="180" required></div><div><label>ظرفیت</label><input name="capacity" type="number" min="1" max="100" required></div><div><label>هزینه هر جلسه (تومان، اختیاری)</label><input name="price_toman" type="number" min="0" step="1"></div><div><label>وضعیت</label><select name="active"><option value="true">فعال</option><option value="false">غیرفعال</option></select></div></div><div class="form-row"><button type="submit" class="btn btn-primary">ذخیره ویرایش کلاس ←</button></div></form>':blank('هنوز کلاسی تعریف نشده'))+'</div></div>';
+ fillClassForm();
+}
+function fillClassForm(){
+ const select=document.querySelector('[data-class-select]');if(!select)return;
+ const data=S.admin.classes.find(x=>String(x.id)===select.value);if(!data)return;
+ const form=select.closest('form');
+ for(const field of ['discipline','title','coach','weekday','start_time','duration_min','capacity','price_toman','active']){
+  const input=form.elements.namedItem(field);if(input)input.value=field==='active'?String(Boolean(data.active)):String(data[field]??'');
+ }
 }
 function renderAdminPayments(){
  const a=S.admin,options=a.members.map(u=>'<option value="'+u.id+'">'+h(u.full_name)+' · '+h(u.discipline)+'</option>').join('');
@@ -219,10 +231,10 @@ document.addEventListener('submit',async function(ev){
  const form=ev.target;if(form.id!=='auth-form'&&!form.dataset.form)return;ev.preventDefault();
  const d=Object.fromEntries(new FormData(form).entries()),kind=form.id==='auth-form'?location.pathname.slice(1):form.dataset.form;
  if(kind==='setup')d.invite=captureOwnerInvite();
- const routes={login:'/api/auth/login',register:'/api/auth/register',setup:'/api/bootstrap','member-create':'/api/admin/member/create','person-update':'/api/admin/member/update',measurement:'/api/admin/measurement',payment:'/api/admin/payment',settings:'/api/admin/settings',class:'/api/admin/class'};
+ const routes={login:'/api/auth/login',register:'/api/auth/register',setup:'/api/bootstrap','member-create':'/api/admin/member/create','person-update':'/api/admin/member/update',measurement:'/api/admin/measurement',payment:'/api/admin/payment',settings:'/api/admin/settings',class:'/api/admin/class','class-update':'/api/admin/class/update',password:'/api/account/change-password'};
  let b=form.querySelector('[type=submit]');if(b)b.disabled=true;
  try{const saved=await api(routes[kind],d);if(['login','register','setup'].includes(kind)){if(kind==='login'){const x=await api('/api/me');location.assign(x.user?.role==='admin'?'/admin':'/member');}else{if(kind==='setup'){try{sessionStorage.removeItem('ugym_owner_invite');}catch{}}location.assign(kind==='setup'?'/admin':'/member');}return;}
- flash('اطلاعات با موفقیت ذخیره شد');if(kind==='member-create'||kind==='measurement'||kind==='payment'||kind==='class')form.reset();if(kind==='member-create'){S.tab='members';S.selected=saved.id;}await loadAdmin();if(kind==='member-create'&&$('person-detail'))$('person-detail').scrollIntoView({behavior:'smooth',block:'start'});
+ flash('اطلاعات با موفقیت ذخیره شد');if(kind==='member-create'||kind==='measurement'||kind==='payment'||kind==='class'||kind==='password')form.reset();if(kind==='member-create'){S.tab='members';S.selected=saved.id;}await loadAdmin();if(kind==='member-create'&&$('person-detail'))$('person-detail').scrollIntoView({behavior:'smooth',block:'start'});
  }catch(e){if(form.id==='auth-form'){$('auth-error').textContent=e.message;$('auth-error').hidden=false;}else flash(e.message,true);}finally{if(b)b.disabled=false;}
 });
 document.addEventListener('click',async function(ev){
@@ -251,6 +263,7 @@ document.addEventListener('click',async function(ev){
  }catch(e){flash(e.message,true);}
 });
 document.addEventListener('change',async function(ev){
+ if(ev.target.matches('[data-class-select]')){fillClassForm();return;}
  const t=ev.target.closest('[data-booking]');if(!t)return;
  try{await api('/api/admin/booking/status',{booking_id:Number(t.dataset.booking),status:t.value});flash('وضعیت حضور ذخیره شد');await loadAdmin();}catch(e){flash(e.message,true);}
 });
