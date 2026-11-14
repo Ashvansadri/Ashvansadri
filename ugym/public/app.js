@@ -161,15 +161,16 @@ function renderAdminAttendance(){
  $('admin-view').innerHTML='<div class="dash-card"><div class="card-head"><h3>رزروها و حضور و غیاب</h3><span class="live-badge">LIVE BOOKING RECORDS</span></div>'+(rows.length?table(['ورزشکار','کلاس','تاریخ','وضعیت','تغییر وضعیت'],rows):blank('هنوز رزروی ثبت نشده است'))+'</div>';
 }
 function renderAdmin(){
- const heads={overview:'نمای کلی باشگاه',members:'مدیریت ورزشکاران',classes:'برنامه و کلاس‌ها',payments:'شهریه‌ها و امور مالی',attendance:'حضور و غیاب'};
+ const heads={overview:'نمای کلی باشگاه',members:'مدیریت ورزشکاران',classes:'برنامه و کلاس‌ها',payments:'شهریه‌ها و امور مالی',attendance:'حضور و غیاب',settings:'تنظیمات باشگاه'};
  $('admin-heading').textContent=heads[S.tab];setActive('#admin-nav [data-tab]','tab',S.tab);
  if(S.tab==='overview')renderAdminOverview();
  else if(S.tab==='members')renderAdminMembers();
  else if(S.tab==='classes')renderAdminClasses();
  else if(S.tab==='payments')renderAdminPayments();
+ else if(S.tab==='settings')renderAdminSettings();
  else renderAdminAttendance();
 }
-async function loadAdmin(){S.admin=await api('/api/admin/overview');if(S.selected){try{S.person=await api('/api/admin/member?id='+S.selected);}catch{S.selected=null;S.person=null;}}renderAdmin();}
+async function loadAdmin(){const [overview,config]=await Promise.all([api('/api/admin/overview'),api('/api/public/payment-info')]);S.admin=overview;S.payConfig=config.payment;if(S.selected){try{S.person=await api('/api/admin/member?id='+S.selected);}catch{S.selected=null;S.person=null;}}renderAdmin();}
 function renderMemberProgress(){
  const m=S.member,records=m.measurements;
  const due=moneySum(m.payments,'pending'),att=m.bookings.filter(x=>x.status==='attended').length;
@@ -203,7 +204,7 @@ function renderMember(){
  else if(S.memberTab==='classes')renderMemberClasses();
  else renderMemberPayments();
 }
-async function loadMember(){S.member=await api('/api/member/dashboard');renderMember();}
+async function loadMember(){const [member,config]=await Promise.all([api('/api/member/dashboard'),api('/api/public/payment-info')]);S.member=member;S.payConfig=config.payment;renderMember();}
 async function boot(){
  try{
   const result=await api('/api/me');S.user=result.user;header();
@@ -218,16 +219,26 @@ document.addEventListener('submit',async function(ev){
  const form=ev.target;if(form.id!=='auth-form'&&!form.dataset.form)return;ev.preventDefault();
  const d=Object.fromEntries(new FormData(form).entries()),kind=form.id==='auth-form'?location.pathname.slice(1):form.dataset.form;
  if(kind==='setup')d.invite=captureOwnerInvite();
- const routes={login:'/api/auth/login',register:'/api/auth/register',setup:'/api/bootstrap','member-create':'/api/admin/member/create','person-update':'/api/admin/member/update',measurement:'/api/admin/measurement',payment:'/api/admin/payment',class:'/api/admin/class'};
+ const routes={login:'/api/auth/login',register:'/api/auth/register',setup:'/api/bootstrap','member-create':'/api/admin/member/create','person-update':'/api/admin/member/update',measurement:'/api/admin/measurement',payment:'/api/admin/payment',settings:'/api/admin/settings',class:'/api/admin/class'};
  let b=form.querySelector('[type=submit]');if(b)b.disabled=true;
- try{await api(routes[kind],d);if(['login','register','setup'].includes(kind)){if(kind==='login'){const x=await api('/api/me');location.assign(x.user?.role==='admin'?'/admin':'/member');}else{if(kind==='setup'){try{sessionStorage.removeItem('ugym_owner_invite');}catch{}}location.assign(kind==='setup'?'/admin':'/member');}return;}
- flash('اطلاعات با موفقیت ذخیره شد');if(kind==='member-create'||kind==='measurement'||kind==='payment'||kind==='class')form.reset();await loadAdmin();
+ try{const saved=await api(routes[kind],d);if(['login','register','setup'].includes(kind)){if(kind==='login'){const x=await api('/api/me');location.assign(x.user?.role==='admin'?'/admin':'/member');}else{if(kind==='setup'){try{sessionStorage.removeItem('ugym_owner_invite');}catch{}}location.assign(kind==='setup'?'/admin':'/member');}return;}
+ flash('اطلاعات با موفقیت ذخیره شد');if(kind==='member-create'||kind==='measurement'||kind==='payment'||kind==='class')form.reset();if(kind==='member-create'){S.tab='members';S.selected=saved.id;}await loadAdmin();if(kind==='member-create'&&$('person-detail'))$('person-detail').scrollIntoView({behavior:'smooth',block:'start'});
  }catch(e){if(form.id==='auth-form'){$('auth-error').textContent=e.message;$('auth-error').hidden=false;}else flash(e.message,true);}finally{if(b)b.disabled=false;}
 });
 document.addEventListener('click',async function(ev){
- const t=ev.target.closest('[data-tab],[data-member-tab],[data-person],[data-metric],[data-action],[data-book],[data-cancel],[data-pay]');
+ const t=ev.target.closest('[data-tab],[data-member-tab],[data-person],[data-metric],[data-action],[data-book],[data-cancel],[data-pay],[data-receipt],[data-copy-card]');
  if(!t)return;
  try{
+  if(t.hasAttribute('data-copy-card')){
+   const number=String(S.payConfig.card_number||'').replace(/\D/g,'');
+   try{await navigator.clipboard.writeText(number);flash('شماره کارت کپی شد');}catch{window.prompt('شماره کارت را کپی کن',number);}
+   return;
+  }
+  if(t.dataset.receipt){
+   if(!confirm('آیا تصویر رسید را واقعاً در واتساپ باشگاه ارسال کرده‌ای؟ اعلام ارسال، تأیید پرداخت نیست.'))return;
+   await api('/api/member/payment/receipt-notice',{payment_id:Number(t.dataset.receipt)});
+   flash('اعلام ارسال رسید ثبت شد. منتظر تأیید مدیر باش.');await loadMember();return;
+  }
   if(t.dataset.tab){S.tab=t.dataset.tab;S.selected=null;S.person=null;renderAdmin();return;}
   if(t.dataset.memberTab){S.memberTab=t.dataset.memberTab;renderMember();return;}
   if(t.dataset.metric){S.metric=t.dataset.metric;if(!$('page-member').hidden)renderMember();else renderPersonDetail();return;}
