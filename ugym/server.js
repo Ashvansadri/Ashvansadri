@@ -143,9 +143,9 @@ async function handler(req,res){
         await session(res,created);return send(res,201,{ok:true});
       }
       if(p==='/api/auth/register'&&req.method==='POST'){
-        let name=clean(b.full_name,120),email=clean(b.email,180).toLowerCase(),pass=String(b.password||''),discipline=clean(b.discipline,40);
-        if(name.length<2||!validEmail(email)||pass.length<10||pass.length>128||!['پیلاتس','ایروبیک','بدنسازی','TRX'].includes(discipline))return fail(res,400,'اطلاعات ثبت‌نام معتبر نیست؛ رمز حداقل ۱۰ حرف باشد');
-        let r;try{r=await pool.query("INSERT INTO ug_users(role,full_name,email,password_hash,discipline) VALUES('member',$1,$2,$3,$4) RETURNING id",[name,email,pwHash(pass),discipline]);}catch(e){if(e.code==='23505')return fail(res,409,'این ایمیل قبلاً ثبت شده است');throw e;}
+        let name=clean(b.full_name,120),email=clean(b.email,180).toLowerCase(),pass=String(b.password||''),discipline=clean(b.discipline,40),username=clean(b.username,32).toLowerCase();
+        if(name.length<2||!validEmail(email)||!(/^[a-z][a-z0-9_]{2,31}$/.test(username))||pass.length<10||pass.length>128||!['پیلاتس','ایروبیک','بدنسازی','TRX'].includes(discipline))return fail(res,400,'اطلاعات ثبت‌نام معتبر نیست؛ رمز حداقل ۱۰ حرف باشد');
+        let r;try{r=await pool.query("INSERT INTO ug_users(role,full_name,email,username,password_hash,discipline) VALUES('member',$1,$2,$3,$4,$5) RETURNING id",[name,email,username,pwHash(pass),discipline]);}catch(e){if(e.code==='23505')return fail(res,409,'نام کاربری یا ایمیل قبلاً ثبت شده است');throw e;}
         await session(res,r.rows[0].id);return send(res,201,{ok:true});
       }
       if(p==='/api/auth/login'&&req.method==='POST'){
