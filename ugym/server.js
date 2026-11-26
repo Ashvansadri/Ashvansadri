@@ -4,6 +4,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const crypto=require('node:crypto');
 const {Pool}=require('pg');
+const handleStudio=require('./studio_routes');
 // Dependency-free PNG fallback icons for Android/iOS installability.
 const zlib=require('node:zlib');
 const iconCache=new Map();
@@ -96,7 +97,7 @@ async function handler(req,res){
   res.setHeader('X-Frame-Options','DENY');
   res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');
   res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');
-  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; img-src 'self' data: https://images.unsplash.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
+  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; img-src 'self' data: https://images.unsplash.com https://raw.githubusercontent.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
   const ip=req.socket.remoteAddress||'unknown';
   if(limit(ip))return fail(res,429,'درخواست بیش از حد؛ کمی بعد تلاش کنید');
   const url=new URL(req.url,'http://localhost'),p=url.pathname;
@@ -113,6 +114,7 @@ async function handler(req,res){
         if(!String(req.headers['content-type']||'').toLowerCase().startsWith('application/json'))return fail(res,415,'فرمت درخواست پشتیبانی نمی‌شود');
       }
       const b=req.method==='POST'?await body(req):{};
+      if(p.startsWith('/api/v2/'))return await handleStudio({req,res,path:p,body:b,pool,auth,send,fail,audit});
       if(p==='/api/public/payment-info'&&req.method==='GET'){
         res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Vary','Origin');
         const r=await pool.query('SELECT card_number,card_holder,whatsapp,updated_at FROM ug_club_settings WHERE id=1');
@@ -276,7 +278,7 @@ async function handler(req,res){
         const r=await pool.query('INSERT INTO ug_classes(discipline,title,coach,weekday,start_time,duration_min,capacity) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id',[discipline,title,coach,weekday,start_time,duration,capacity]);await audit(u.id,'class_created',Number(r.rows[0].id),{discipline});return send(res,201,{ok:true,id:r.rows[0].id});
       }
       if(p==='/api/admin/booking/status'&&req.method==='POST'){
-        if(!idok(b.booking_id)||!['attended','booked','cancelled'].includes(b.status))return fail(res,400,'اطلاعات نامعتبر');
+        if(!idok(b.booking_id)||!['attended','booked','cancelled','absent'].includes(b.status))return fail(res,400,'اطلاعات نامعتبر');
         const r=await pool.query('UPDATE ug_bookings SET status=$2 WHERE id=$1 RETURNING id',[b.booking_id,b.status]);return send(res,200,{ok:r.rowCount>0});
       }
       return fail(res,404,'مسیر یافت نشد');
@@ -287,7 +289,7 @@ async function handler(req,res){
     const icon=iconPng(p==='/icon-512.png'?512:p==='/icon-192.png'?192:180);
     res.writeHead(200,{'Content-Type':'image/png','Cache-Control':'public,max-age=604800','Content-Length':icon.length});res.end(icon);return;
   }
-  const files={'/':'index.html','/admin':'index.html','/member':'index.html','/setup':'index.html','/login':'index.html','/register':'index.html','/index.html':'index.html','/app.js':'app.js','/style.css':'style.css','/extras.js':'extras.js','/extras.css':'extras.css','/manifest.webmanifest':'manifest.webmanifest','/sw.js':'sw.js','/logo.svg':'logo.svg'};
+  const files={'/':'index.html','/admin':'index.html','/member':'index.html','/setup':'index.html','/login':'index.html','/register':'index.html','/index.html':'index.html','/app.js':'app.js','/style.css':'style.css','/extras.js':'extras.js','/extras.css':'extras.css','/studio.js':'studio.js','/studio.css':'studio.css','/manifest.webmanifest':'manifest.webmanifest','/sw.js':'sw.js','/logo.svg':'logo.svg'};
   let file=files[p];if(!file)return fail(res,404,'صفحه یافت نشد');
   const mime={'html':'text/html; charset=utf-8','js':'application/javascript; charset=utf-8','css':'text/css; charset=utf-8','svg':'image/svg+xml','webmanifest':'application/manifest+json'};
   const ext=file.split('.').pop();
