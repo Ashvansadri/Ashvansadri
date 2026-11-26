@@ -50,7 +50,7 @@ module.exports = async function handleStudio({req,res,path:route,body:b,pool,aut
   if(!member)return error(403,'فقط ورزشکار');
   const date=clip(b.measured_at,10);
   if(!validDate(date))return error(400,'تاریخ معتبر نیست');
-  const clock=await pool.query("SELECT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Tehran')::date AS today");
+  const clock=await pool.query("SELECT to_char((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Tehran')::date,'YYYY-MM-DD') AS today");
   const today=String(clock.rows[0].today).slice(0,10);
   if(new Date(date)>new Date(today)||new Date(date)<new Date(Date.now()-365*86400000))return error(400,'تاریخ باید از یک سال گذشته تا امروز باشد');
   const fields=['weight_kg','body_fat_pct','waist_cm','performance_score'],max=[400,100,300,100],values=[];
@@ -64,7 +64,7 @@ module.exports = async function handleStudio({req,res,path:route,body:b,pool,aut
   if(!member)return error(403,'فقط ورزشکار');
   const itemId=id(b.plan_item_id),date=clip(b.performed_on,10),sets=Number(b.completed_sets),weight=b.weight_kg===''||b.weight_kg==null?null:Number(b.weight_kg),difficulty=b.difficulty===''||b.difficulty==null?null:Number(b.difficulty);
   if(!itemId||!validDate(date)||!Number.isInteger(sets)||sets<0||sets>20||weight!==null&&(!Number.isFinite(weight)||weight<0||weight>400)||difficulty!==null&&(!Number.isInteger(difficulty)||difficulty<1||difficulty>10))return error(400,'اطلاعات ثبت تمرین معتبر نیست');
-  if(new Date(date)>new Date()||new Date(date)<new Date(Date.now()-92*86400000))return error(400,'تمرین آینده یا بیش از سه ماه قبل قابل ثبت نیست');
+  if(new Date(date).valueOf()>Date.now()||new Date(date).valueOf()<Date.now()-92*86400000)return error(400,'تمرین آینده یا بیش از سه ماه قبل قابل ثبت نیست');
   const p=await pool.query("SELECT i.id,i.sets FROM ug_training_plan_items i JOIN ug_training_plans p ON p.id=i.plan_id WHERE i.id=$1 AND p.user_id=$2 AND p.status='active'",[itemId,u.id]);
   if(!p.rows.length)return error(404,'این حرکت در برنامه فعال شما نیست');
   if(sets>p.rows[0].sets)return error(400,'تعداد ست نباید از برنامه مربی بیشتر باشد؛ برای اصلاح برنامه با مربی هماهنگ کنید');
