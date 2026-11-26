@@ -99,9 +99,31 @@
    '<div class="ug-day-tabs">'+dayTabs+'</div><div class="ug-member-movements">'+items+'</div>'+
    '<p class="ug-source-note">تصاویر صرفاً شروع و پایان حرکت را نشان می‌دهند و جایگزین آموزش حضوری مربی نیستند. تصاویر آموزشی CC0 از <a target="_blank" rel="noopener noreferrer" href="'+source+'">کتابخانه حرکات</a> هستند.</p>';
  }
- function memberNutrition(data){/* MEMBER_NUTRITION */ }
- function memberNotices(data){/* MEMBER_NOTICES */ }
- function mountSelfMeasure(){/* SELF_MEASURE */ }
+ function memberNutrition(data){
+  const a=data.nutrition,out=$('member-view');
+  if(!a){out.innerHTML=header('راهنمای تغذیه من','بعد از اینکه مربی برنامه را برایت ثبت کند، در این بخش نمایش داده می‌شود.')+empty('هنوز راهنمای تغذیه اختصاصی ثبت نشده است.');return;}
+  const meals=[['صبحانه',a.breakfast],['ناهار',a.lunch],['شام',a.dinner],['میان‌وعده',a.snacks]];
+  out.innerHTML=header(a.title,'آخرین ویرایش مربی: '+date(a.updated_at))+
+   '<div class="ug-meal-grid">'+meals.filter(x=>x[1]).map((m,i)=>'<div class="ug-meal"><span>0'+(i+1)+' ✦</span><h3>'+esc(m[0])+'</h3><p>'+esc(m[1])+'</p></div>').join('')+'</div>'+
+   (a.guidance?'<section class="dash-card section-gap"><h3>توصیه‌های مربی</h3><p class="ug-nutrition-text">'+esc(a.guidance)+'</p></section>':'')+
+   '<p class="ug-source-note">رژیم درمانی، تغذیه در بیماری، بارداری و مصرف مکمل به نظر متخصص واجدصلاحیت نیاز دارد.</p>';
+ }
+ function memberNotices(data){
+  const msgs=[...data.reminders.map((x,i)=>({...x,auto:true,id:'auto-'+i})),...data.notices];
+  const cards=msgs.map(x=>'<article class="ug-inbox-card '+(!x.auto&&!x.is_read?'unread':'')+'"><div class="ug-inbox-icon">'+(x.kind==='payment'?'◈':x.kind==='attendance'?'♙':'✦')+'</div><div><small>'+(x.auto?'یادآوری سامانه':date(x.created_at))+'</small><h3>'+esc(x.title)+'</h3><p>'+esc(x.body)+'</p>'+(!x.auto&&!x.is_read?'<button type="button" class="mini-btn" data-notice-read="'+x.id+'">خواندم ✓</button>':'')+'</div></article>').join('');
+  $('member-view').innerHTML=header('صندوق اعلان‌های من','یادآوری شهریه، حضور و پیام‌های باشگاه را در یک جا ببین.')+
+   (cards?'<div class="ug-inbox-grid">'+cards+'</div>':empty('اعلان تازه‌ای وجود ندارد'))+
+   '<p class="ug-source-note">یادآوری‌های هوشمند هنگام ورود به پنل به‌روزرسانی می‌شوند؛ ارسال پوش بیرون از اپ هنوز فعال نیست.</p>';
+ }
+ function mountSelfMeasure(){
+  const out=$('member-view');if(!out)return;
+  const wrapper=document.createElement('section');wrapper.className='dash-card section-gap ug-self-measure';
+  wrapper.innerHTML='<h3>اندازه‌گیری جدید من</h3><p class="tiny-muted">اطلاعاتی که خودت ثبت می‌کنی با برچسب «خوداظهاری» ذخیره می‌شوند تا مربی آن‌ها را بررسی کند.</p>'+
+   '<form data-studio-form="measure" class="ug-coach-form"><div class="field-grid cols3"><div><label>تاریخ</label>'+field('measured_at',iso(),'date','required')+'</div><div><label>وزن (کیلوگرم)</label>'+field('weight_kg','','number','min="0.1" max="400" step=".01"')+'</div><div><label>چربی بدن (درصد)</label>'+field('body_fat_pct','','number','min="0.1" max="100" step=".1"')+'</div><div><label>دور کمر (سانتی‌متر)</label>'+field('waist_cm','','number','min="0.1" max="300" step=".1"')+'</div><div><label>امتیاز عملکرد /۱۰۰</label>'+field('performance_score','','number','min="0.1" max="100" step=".1"')+'</div></div><label>توضیح (اختیاری)</label>'+field('note','','text','maxlength="400" placeholder="مثلاً اندازه‌گیری صبح"')+'<button type="submit" class="btn btn-primary">ذخیره برای بررسی مربی ←</button></form>';
+  out.append(wrapper);
+  const items=B().state().member?.measurements||[],pending=items.filter(x=>x.source==='member'&&!x.verified);
+  if(pending.length){const p=document.createElement('p');p.className='ug-unverified-tag';p.textContent=fa(pending.length)+' مورد خوداظهاری در انتظار تأیید مربی است.';wrapper.append(p)}
+ }
  async function refresh(){if(B().state().user?.role==='admin')await renderAdmin(state.mode);else await renderMember(state.mode)}
  document.addEventListener('change',ev=>{
   if(ev.target.matches('[data-studio-athlete]')){state.athlete=ev.target.value;state.plan=null;renderAdmin('studio');}
