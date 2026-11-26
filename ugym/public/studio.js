@@ -32,7 +32,43 @@
  function status(p){return p.status==='active'?'فعال':p.status==='draft'?'پیش‌نویس':'بایگانی'}
  async function renderAdmin(which='studio'){state.mode=which;const serial=++state.serial;const out=$('admin-view');if(!out)return;out.innerHTML=empty('در حال دریافت اطلاعات...');try{if(which==='notices')await adminNotices(serial);else await adminPrograms(serial)}catch(e){if(serial===state.serial)out.innerHTML=empty(e.message);toast(e.message,true)}}
  async function renderMember(which='training'){state.mode=which;const serial=++state.serial;const out=$('member-view');if(!out)return;out.innerHTML=empty('در حال دریافت برنامه اختصاصی...');try{const data=await api('/api/v2/member/studio');if(serial!==state.serial)return;if(which==='nutrition')memberNutrition(data);else if(which==='notices')memberNotices(data);else memberTraining(data)}catch(e){if(serial===state.serial)out.innerHTML=empty(e.message);toast(e.message,true)}}
- async function adminPrograms(serial){/* ADMIN_PROGRAMS */ }
+ async function adminPrograms(serial){
+  const members=B().state().admin?.members||[],out=$('admin-view');
+  if(!members.length){out.innerHTML=header('استودیو مربی','ابتدا از بخش «ورزشکاران» اولین عضو را ثبت کن.')+'<button type="button" class="btn btn-primary" data-tab="members">ثبت ورزشکار ←</button>';return;}
+  const who=members.find(x=>String(x.id)===String(state.athlete))?.id||members[0].id;
+  state.athlete=who;
+  const [detail,choices]=await Promise.all([
+   api('/api/v2/admin/studio?user_id='+who+(state.plan?'&plan_id='+state.plan:'')),
+   exerciseSelect()
+  ]);
+  if(serial!==state.serial)return;
+  state.plan=detail.plan?.id||null;
+  const current=detail.plan,nut=detail.nutrition||{};
+  const plans='<div class="ug-plan-tabs">'+detail.plans.map(p=>'<button type="button" class="'+(current&&String(current.id)===String(p.id)?'selected':'')+'" data-plan-select="'+p.id+'"><b>'+esc(p.title)+'</b><small>'+status(p)+'</small></button>').join('')+'</div>';
+  const items=detail.items.map((it,i)=>'<div class="ug-prescription-item">'+movement(it)+'<div class="ug-prescription-body"><small>'+esc(it.day_label)+' · '+esc(it.discipline)+'</small><h4>'+esc(it.name_fa)+'</h4><div class="ug-rx"><span>'+fa(it.sets)+' ست</span><span>'+esc(it.reps)+' تکرار/زمان</span><span>'+fa(it.rest_seconds)+' ثانیه استراحت</span></div>'+(it.coach_note?'<div class="ug-coach-memo">'+esc(it.coach_note)+'</div>':'')+'<details><summary>آموزش حرکت و نکات ایمنی</summary>'+instruction(it)+'</details><button type="button" class="ug-danger" data-item-remove="'+it.id+'">حذف حرکت</button></div></div>').join('');
+  const pending=detail.measurements.filter(x=>x.source==='member'&&!x.verified).map(m=>'<div class="ug-review"><div><b>'+date(m.measured_at)+'</b><small>وزن: '+fa(m.weight_kg)+' · چربی: '+fa(m.body_fat_pct)+' · دور کمر: '+fa(m.waist_cm)+'</small><p>'+esc(m.note)+'</p></div><button type="button" class="mini-btn" data-verify="'+m.id+'">تأیید مربی ✓</button></div>').join('');
+  const logs=detail.logs.slice(0,22).map(log=>'<div class="ug-review"><div><b>'+esc(log.name_fa)+'</b><small>'+date(log.performed_on)+' · '+fa(log.completed_sets)+' ست'+(log.weight_kg?' · '+fa(log.weight_kg)+' کیلوگرم':'')+'</small></div></div>').join('');
+  const planForm='<form data-studio-form="plan" class="ug-coach-form"><h4>ساخت برنامه جدید</h4><div class="field-grid"><div><label>عنوان برنامه</label>'+field('title','','text','maxlength="100" required placeholder="مثلاً ماه اول – قدرت و تعادل"')+'</div><div><label>تاریخ شروع</label>'+field('start_date',iso(),'date','required')+'</div><div><label>تاریخ پایان (اختیاری)</label>'+field('end_date','','date')+'</div></div><label>هدف</label>'+field('goal','','text','maxlength="300" placeholder="هدف برنامه"')+'<label>یادداشت مربی</label><textarea rows="2" name="coach_note" maxlength="650" placeholder="نکته‌های شخصی مربی"></textarea><button type="submit" class="btn btn-primary">ساخت پیش‌نویس برنامه ←</button></form>';
+  let planDetail=empty('برای نوشتن برنامه، یک پیش‌نویس جدید بساز.');
+  if(current){
+   const menu='<div class="ug-plan-header"><h3>'+esc(current.title)+'</h3><span class="pill">'+status(current)+'</span></div><div class="ug-plan-points">'+esc(current.goal||'')+' · شروع: '+date(current.start_date)+'</div>';
+   let add='';
+   if(current.status!=='archived'){
+    add='<form data-studio-form="item" class="ug-coach-form"><h4>افزودن حرکت</h4><div class="field-grid"><div><label>حرکت تمرینی</label>'+choices+'</div><div><label>روز برنامه</label>'+daySelect()+'</div><div><label>ست</label>'+field('sets','3','number','required min="1" max="20"')+'</div><div><label>تکرار / زمان</label>'+field('reps','۱۲','text','required maxlength="25"')+'</div><div><label>استراحت (ثانیه)</label>'+field('rest_seconds','60','number','required min="0" max="900"')+'</div></div><label>توضیح مخصوص این ورزشکار</label>'+field('coach_note','','text','maxlength="300"')+'<div id="ug-ex-preview"></div><div class="form-row"><button type="submit" class="btn btn-primary">افزودن حرکت +</button>'+(current.status==='draft'&&detail.items.length?'<button type="button" class="mini-btn" data-plan-publish="'+current.id+'">انتشار برای ورزشکار ✓</button>':'')+'</div></form>';
+   }
+   planDetail=menu+'<div class="ug-prescriptions">'+(items||empty('هنوز حرکتی ثبت نشده است.'))+'</div>'+add;
+  }
+  const nutrition='<form data-studio-form="nutrition" class="ug-coach-form"><label>عنوان راهنمای تغذیه</label>'+field('title',nut.title||'راهنمای تغذیه','text','required maxlength="100"')+
+   '<label>صبحانه</label><textarea name="breakfast" rows="2" maxlength="600">'+esc(nut.breakfast)+'</textarea><label>ناهار</label><textarea name="lunch" rows="2" maxlength="600">'+esc(nut.lunch)+'</textarea><label>شام</label><textarea name="dinner" rows="2" maxlength="600">'+esc(nut.dinner)+'</textarea><label>میان‌وعده</label><textarea name="snacks" rows="2" maxlength="600">'+esc(nut.snacks)+'</textarea><label>توصیه عمومی مربی</label><textarea name="guidance" rows="3" maxlength="950">'+esc(nut.guidance)+'</textarea><button type="submit" class="btn btn-primary">ذخیره راهنمای تغذیه ←</button></form>';
+  out.innerHTML=header('استودیو مربی','برنامه تمرین، نمایش حرکات، راهنمای غذایی و سابقه واقعی اجرای ورزشکار را از همین‌جا مدیریت کن.')+
+  '<div class="dash-card"><label>انتخاب ورزشکار</label>'+selectUser(members,who)+'<p class="tiny-muted">'+esc(detail.athlete.discipline)+' · '+esc(detail.athlete.goal||'هدف هنوز ثبت نشده')+'</p></div>'+
+  '<div class="ug-coach-columns"><div><section class="dash-card"><h3>برنامه‌های این ورزشکار</h3>'+plans+planForm+'</section>'+
+  '<section class="dash-card section-gap">'+planDetail+'</section></div>'+
+  '<div><section class="dash-card"><h3>توصیه غذایی اختصاصی</h3><p class="tiny-muted">برنامه غذایی با نظر مربی و متخصص واجدصلاحیت تنظیم شود.</p>'+nutrition+'</section>'+
+  '<section class="dash-card section-gap"><h3>اندازه‌گیری‌های منتظر تأیید</h3>'+(pending||empty('اندازه‌گیری منتظر بررسی وجود ندارد.'))+'</section>'+
+  '<section class="dash-card section-gap"><h3>عملکرد ثبت‌شده ورزشکار</h3>'+(logs||empty('هنوز اجرای تمرینی ثبت نشده است.'))+'</section></div></div>';
+  preview();
+ }
  async function adminNotices(serial){/* ADMIN_NOTICES */ }
  function memberTraining(data){/* MEMBER_TRAINING */ }
  function memberNutrition(data){/* MEMBER_NUTRITION */ }
