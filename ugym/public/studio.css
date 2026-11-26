@@ -1,0 +1,99 @@
+/* UGYM Coach Studio | women's fitness premium violet / metallic noir */
+.ug-studio-banner{position:relative;overflow:hidden;padding:32px 38px;margin-bottom:23px;border:1px solid #ac8cd46e;border-radius:26px;background:radial-gradient(circle at 91% -20%,#b78af14d,transparent 58%),linear-gradient(115deg,#382448,#141524 85%)}
+.ug-studio-banner::after{content:"U";pointer-events:none;position:absolute;left:2%;top:-90px;color:#d9b7ff0b;font:900 210px Arial}
+.ug-studio-eyebrow{font:800 10px Arial;letter-spacing:1.6px;color:#d9b6fc}
+.ug-studio-banner h2{font-size:clamp(23px,3vw,34px);font-weight:900;margin:13px 0 7px}
+.ug-studio-banner p{color:#c6bbd3;line-height:2;font-size:12px;max-width:670px;margin:0}
+.ug-studio-empty{border:1px dashed #665675;border-radius:16px;padding:27px 18px;background:#1a1928;color:#a89bb8;font-size:24px;text-align:center}
+.ug-studio-empty p{font-size:11px;margin:8px 0 0;line-height:2}
+.ug-coach-columns{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;margin-top:18px;align-items:start}
+.ug-coach-form{display:flex;flex-direction:column;gap:0;margin:20px 0 0}
+.ug-coach-form>h4{font-size:14px;color:#ecdeff;margin:0 0 8px}
+.ug-coach-form>button[type=submit],.ug-workout-form>button{margin-top:19px;align-self:start}
+.ug-coach-form textarea{resize:vertical;min-height:60px}
+.ug-plan-tabs{display:flex;gap:9px;overflow-x:auto;padding:5px 0 14px;scrollbar-width:thin}
+.ug-plan-tabs button{min-width:132px;border-radius:13px;border:1px solid #7e669761;background:#262035;color:#eee0f9;padding:12px;text-align:right;display:flex;flex-direction:column;gap:5px}
+.ug-plan-tabs button.selected{border-color:#d6b3f4;background:#66468066}
+.ug-plan-tabs b{font-size:11px;font-weight:800}.ug-plan-tabs small{font-size:9px;color:#b8a2cc}
+.ug-plan-header{display:flex;gap:10px;justify-content:space-between;align-items:center}
+.ug-plan-header h3{margin:0;font-size:16px}
+.ug-plan-points{color:#ad9cba;font-size:11px;margin:8px 0 24px}
+.ug-prescriptions{display:flex;flex-direction:column;gap:15px}
+.ug-prescription-item{border-radius:16px;overflow:hidden;border:1px solid #64517688;background:#161625;display:grid;grid-template-columns:190px minmax(0,1fr)}
+.ug-prescription-body{padding:16px;min-width:0}
+.ug-prescription-body>small{font-size:10px;color:#d1b3ef}
+.ug-prescription-body h4{margin:6px 0;font-size:16px}
+.ug-rx{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}
+.ug-rx span{background:#a67ed727;border:1px solid #9a7ab35b;border-radius:9px;padding:7px 10px;font-size:10px;color:#ead8ff}
+.ug-coach-memo{font-size:11px;line-height:2.1;margin:15px 0;border-right:3px solid #c9a4f5;padding:11px 15px;background:#9c72c31a;color:#ecddff;border-radius:8px}
+.ug-full-note{margin-top:-10px;margin-bottom:20px}
+.ug-prescription-body details{font-size:11px;margin:10px 0;color:#dcc3f6}
+.ug-prescription-body details summary{cursor:pointer;line-height:2;user-select:none}
+.ug-danger{background:none;color:#f5abb9;border:1px solid #d88a9a69;padding:8px 11px;border-radius:9px;font-size:10px;margin-top:9px}
+.ug-danger:hover{background:#e4668222}
+.ug-exercise-picture{position:relative;overflow:hidden;background:radial-gradient(ellipse at center,#594b7359,#171625 80%);min-height:176px;margin:0;display:grid;place-items:center;isolation:isolate;border-left:1px solid #5b486e4d}
+.ug-exercise-picture>img{width:100%;height:100%;min-height:177px;max-height:300px;object-fit:contain;position:absolute;inset:0;mix-blend-mode:normal}
+.ug-exercise-picture figcaption{position:absolute;bottom:0;left:0;right:0;text-align:center;z-index:3;background:linear-gradient(transparent,#13121a 60%);color:#e5cfff;padding:19px 8px 7px;font-size:9px}
+.ug-exercise-picture .ug-start-frame{z-index:1;opacity:1}
+.ug-exercise-picture .ug-end-frame{z-index:2;opacity:0}
+.ug-exercise-picture.is-motion .ug-start-frame{animation:ug-start 3s ease-in-out infinite}
+.ug-exercise-picture.is-motion .ug-end-frame{animation:ug-end 3s ease-in-out infinite}
+@keyframes ug-start{0%,43%{opacity:1}50%,95%{opacity:0}100%{opacity:1}}
+@keyframes ug-end{0%,43%{opacity:0}50%,95%{opacity:1}100%{opacity:0}}
+.ug-instruction{font-size:11px;color:#d5c9e5;line-height:2.1}
+.ug-instruction p{margin:7px 0;white-space:pre-line}
+.ug-instruction small{display:block;color:#ecd1b5;line-height:1.9;margin-top:6px}
+.ug-instruction a{display:inline-block;color:#dcb9f5;text-decoration:underline;text-underline-offset:4px;font-size:10px;margin-top:7px}
+.ug-preview{border:1px solid #745d8a85;background:#1c1929;border-radius:15px;overflow:hidden;margin-top:16px;display:grid;grid-template-columns:180px 1fr}
+.ug-preview>.ug-instruction{padding:13px}
+.ug-review{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:15px 0;border-bottom:1px solid #453b4b}
+.ug-review:last-child{border-bottom:0}
+.ug-review b,.ug-review small{display:block}
+.ug-review b{font-size:12px}
+.ug-review small{font-size:10px;color:#b7a9bf;line-height:2}
+.ug-review p{color:#b6adc1;font-size:10px}
+.ug-review button{flex-shrink:0}
+.ug-notice{padding:16px 0;border-bottom:1px solid #3e364b}
+.ug-notice:last-child{border:0}.ug-notice b{font-size:13px;display:block}
+.ug-notice small{font-size:10px;color:#bcaacb;display:block;margin:7px 0}
+.ug-notice p{font-size:11px;color:#d4c8db;white-space:pre-line;line-height:2;margin:0}
+.ug-studio-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:0 0 22px}
+.ug-studio-kpis>div{border:1px solid #65527371;background:linear-gradient(135deg,#372444,#191724);border-radius:17px;padding:19px}
+.ug-studio-kpis span{display:block;font-size:10px;color:#bcb0cb}
+.ug-studio-kpis strong{display:block;font:800 30px Arial;margin-top:8px;direction:ltr;text-align:right}
+.ug-day-tabs{display:flex;gap:10px;overflow-x:auto;margin-bottom:19px;padding-bottom:7px}
+.ug-day-tabs>button{border:1px solid #685475;background:#211b30;padding:11px 21px;border-radius:30px;color:#cbb6da;white-space:nowrap;font-size:12px;font-weight:800}
+.ug-day-tabs>button.active{background:#d2b1f0;color:#24172e;border-color:#ebd1ff}
+.ug-member-movements{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:19px}
+.ug-movement-card{min-width:0;overflow:hidden;border-radius:22px;border:1px solid #6954768c;background:linear-gradient(150deg,#20192d,#141825);box-shadow:0 18px 39px #0006}
+.ug-movement-card .ug-exercise-picture{min-height:310px;border:0;border-bottom:1px solid #463958}
+.ug-movement-card .ug-exercise-picture img{max-height:320px}
+.ug-movement-body{padding:24px}
+.ug-move-tag{font-size:10px;color:#cda8ee;letter-spacing:.5px}
+.ug-movement-body h3{font-size:21px;font-weight:900;margin:7px 0 16px}
+.ug-movement-body .ug-instruction{margin:15px 0}
+.ug-workout-form,.ug-movement-body .ug-coach-form{margin-top:23px;border-top:1px solid #5c466a;padding-top:20px}
+.ug-workout-form h4,.ug-coach-form h4{margin:0 0 12px;color:#eed8ff;font-size:14px}
+.ug-workout-form button[type=submit]{margin-top:17px}
+.ug-source-note{font-size:10px;line-height:2.2;color:#94899d;margin:19px 0}
+.ug-source-note a{color:#d8b8ec;text-decoration:underline}
+.ug-meal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.ug-meal{border:1px solid #7c5e9473;border-radius:22px;background:radial-gradient(circle at 70% 0,#bb7de024,transparent 60%),#211c2e;padding:29px;min-height:180px}
+.ug-meal span{color:#d6bcf0;font:800 11px Arial}
+.ug-meal h3{font-size:19px;margin:12px 0}
+.ug-meal p,.ug-nutrition-text{font-size:12px;white-space:pre-line;color:#d9cfe0;line-height:2.3}
+.ug-inbox-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.ug-inbox-card{border:1px solid #5f4e7485;border-radius:17px;padding:19px;background:#1d1929;display:flex;gap:12px}
+.ug-inbox-card.unread{background:#2d203b;border-color:#b895e1}
+.ug-inbox-icon{background:#c9a5ef25;color:#e3c2ff;width:37px;height:37px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;font-size:18px}
+.ug-inbox-card small{font-size:10px;color:#a79cb5}
+.ug-inbox-card h3{font-size:15px;margin:5px 0}
+.ug-inbox-card p{font-size:11px;white-space:pre-line;line-height:2;color:#ddd0e7}
+.ug-inbox-card button{margin-top:8px}
+.ug-unverified-tag{font-size:11px;color:#efd3a7;border:1px solid #d9b77d52;background:#8065381f;padding:12px;border-radius:10px}
+.ug-studio-loading{color:#cebbe0;padding:50px;text-align:center;font-size:12px}
+@media(min-width:1200px){.ug-movement-card .ug-exercise-picture{min-height:320px}}
+@media(max-width:1100px){.ug-coach-columns{grid-template-columns:1fr}.ug-member-movements{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){.ug-studio-banner{padding:26px 21px}.ug-studio-banner h2{font-size:27px}.ug-prescription-item{grid-template-columns:155px 1fr}.ug-preview{grid-template-columns:140px 1fr}.ug-prescription-body{padding:12px}.ug-member-movements{grid-template-columns:1fr}.ug-movement-card .ug-exercise-picture{min-height:260px}.ug-exercise-picture>img{min-height:160px}.ug-studio-kpis{gap:7px}.ug-studio-kpis>div{padding:13px 11px}.ug-studio-kpis strong{font-size:26px}}
+@media(max-width:490px){.ug-prescription-item{grid-template-columns:1fr}.ug-prescription-item .ug-exercise-picture{min-height:210px;border-bottom:1px solid #5b486e4d}.ug-prescription-item .ug-exercise-picture img{max-height:225px}.ug-preview{grid-template-columns:1fr}.ug-preview .ug-exercise-picture{height:185px}.ug-meal-grid,.ug-inbox-grid{grid-template-columns:1fr}.ug-inbox-card{padding:15px}.ug-movement-body{padding:18px}.ug-rx span{font-size:9px}.ug-studio-kpis strong{font-size:23px}}
+@media(prefers-reduced-motion:reduce){.ug-exercise-picture.is-motion .ug-start-frame,.ug-exercise-picture.is-motion .ug-end-frame{animation:none!important}.ug-exercise-picture.is-motion .ug-end-frame{display:none!important}.ug-exercise-picture.is-motion .ug-start-frame{opacity:1!important}}
