@@ -69,7 +69,14 @@
   '<section class="dash-card section-gap"><h3>عملکرد ثبت‌شده ورزشکار</h3>'+(logs||empty('هنوز اجرای تمرینی ثبت نشده است.'))+'</section></div></div>';
   preview();
  }
- async function adminNotices(serial){/* ADMIN_NOTICES */ }
+ async function adminNotices(serial){
+  const out=$('admin-view'),members=B().state().admin?.members||[];
+  const result=await api('/api/v2/admin/notices');if(serial!==state.serial)return;
+  const list=result.notices.map(n=>'<div class="ug-notice"><b>'+esc(n.title)+'</b><small>'+esc(n.audience)+' · '+date(n.created_at)+'</small><p>'+esc(n.body)+'</p></div>').join('');
+  out.innerHTML=header('اعلان‌های UGYM','برای همه اعضا یا ورزشکار مشخص پیام بفرست؛ پیام در صندوق اعلان‌های اپ نمایش داده می‌شود.')+
+   '<div class="ug-coach-columns"><div class="dash-card"><h3>پیام جدید</h3><form data-studio-form="notice" class="ug-coach-form"><label>گیرنده</label><select name="user_id"><option value="">همه ورزشکاران</option>'+members.map(m=>'<option value="'+m.id+'">'+esc(m.full_name)+'</option>').join('')+'</select><label>نوع اعلان</label><select name="kind"><option value="general">اطلاعیه عمومی</option><option value="payment">یادآوری شهریه</option><option value="attendance">یادآوری حضور</option><option value="training">برنامه تمرین</option></select><label>عنوان</label>'+field('title','','text','required maxlength="90" placeholder="مثلاً تغییر ساعت کلاس"')+'<label>متن پیام</label><textarea rows="4" name="body" required maxlength="750" placeholder="پیام برای ورزشکاران"></textarea><button type="submit" class="btn btn-primary">ارسال به صندوق اعضا ←</button></form><p class="footnote">این اعلان‌ها داخل اپ هستند و فعلاً پیامک، پوش بیرون از اپ یا واتساپ خودکار ارسال نمی‌کنند.</p></div>'+
+   '<div class="dash-card"><h3>اعلان‌های اخیر</h3>'+(list||empty('هنوز اعلانی منتشر نشده است.'))+'</div></div>';
+ }
  function memberTraining(data){/* MEMBER_TRAINING */ }
  function memberNutrition(data){/* MEMBER_NUTRITION */ }
  function memberNotices(data){/* MEMBER_NOTICES */ }
