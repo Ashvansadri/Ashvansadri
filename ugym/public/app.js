@@ -11,7 +11,7 @@ const money=(v)=>n(v)+' تومان';
 const when=(v)=>v?new Intl.DateTimeFormat('fa-IR',{dateStyle:'medium'}).format(new Date(v)):'—';
 const dt=(v)=>v?new Date(v).toLocaleDateString('fa-IR'):'—';
 const blank=(msg)=>'<div class="no-data"><div class="empty-icon">◇</div>'+h(msg)+'</div>';
-const chip=(s)=>'<span class="pill '+(s==='paid'||s==='attended'?'mint':s==='pending'?'amber':s==='cancelled'?'rose':'')+'">'+h(({paid:'پرداخت‌شده',pending:'در انتظار پرداخت',booked:'رزرو شده',cancelled:'لغو شده',attended:'حاضر'})[s]||s)+'</span>';
+const chip=(s)=>'<span class="pill '+(s==='paid'||s==='attended'?'mint':s==='pending'?'amber':s==='cancelled'?'rose':'')+'">'+h(({paid:'پرداخت‌شده',pending:'در انتظار پرداخت',booked:'رزرو شده',cancelled:'لغو شده',attended:'حاضر',absent:'غایب'})[s]||s)+'</span>';
 const fmt=(d)=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const nextDay=(day)=>{let d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+((day-d.getDay()+7)%7));return fmt(d);};
 const label=(k)=>METRICS.find(a=>a[0]===k)||METRICS[0];
@@ -116,7 +116,7 @@ function progressHighlights(measurements){
  const pairs=[['weight_kg','وزن فعلی','kg'],['body_fat_pct','درصد چربی','%'],['performance_score','امتیاز عملکرد','/100']];
  return '<div class="progress-highlights">'+pairs.map(m=>{const records=measurements.filter(x=>x[m[0]]!==null&&x[m[0]]!==undefined);const last=records[records.length-1];return '<div class="highlight"><span>'+m[1]+'</span><strong>'+ (last?n(last[m[0]]):'—')+' <small>'+m[2]+'</small></strong><small>'+(records.length?'براساس آخرین ثبت':'هنوز ثبت نشده')+'</small></div>';}).join('')+'</div>';
 }
-function timeline(measurements){return measurements.length?'<div class="timeline">'+measurements.slice().reverse().slice(0,12).map((m,i)=>'<div class="timeline-item"><strong>'+(i===0?'آخرین ارزیابی · ':'ارزیابی · ')+dt(m.measured_at)+'</strong><p>'+METRICS.filter(k=>m[k[0]]!==null).map(k=>k[1]+': '+n(m[k[0]])+' '+k[2]).join(' | ')+'</p>'+(m.note?'<div class="note-card">'+h(m.note)+'</div>':'')+'</div>').join('')+'</div>':blank('برای شما هنوز اندازه‌گیری ثبت نشده است');}
+function timeline(measurements){return measurements.length?'<div class="timeline">'+measurements.slice().reverse().slice(0,12).map((m,i)=>'<div class="timeline-item"><strong>'+(i===0?'آخرین ارزیابی · ':'ارزیابی · ')+dt(m.measured_at)+'</strong>'+(m.source==='member'?'<span class="pill '+(m.verified?'mint':'amber')+'">'+(m.verified?'خوداظهاری تأییدشده':'خوداظهاری منتظر تأیید')+'</span>':'')+'<p>'+METRICS.filter(k=>m[k[0]]!==null).map(k=>k[1]+': '+n(m[k[0]])+' '+k[2]).join(' | ')+'</p>'+(m.note?'<div class="note-card">'+h(m.note)+'</div>':'')+'</div>').join('')+'</div>':blank('برای شما هنوز اندازه‌گیری ثبت نشده است');}
 function renderAdminMembers(){
  const a=S.admin;let form='<div class="dash-card"><h3>ثبت ورزشکار جدید</h3><form data-form="member-create"><div class="field-grid"><div><label>نام کامل</label><input name="full_name" required placeholder="نام ورزشکار"></div><div><label>ایمیل ورود</label><input name="email" type="email" required placeholder="member@example.com"></div><div><label>نام کاربری انگلیسی</label><input name="username" required minlength="3" maxlength="32" pattern="[a-zA-Z][a-zA-Z0-9_]{2,31}" placeholder="مثلاً sara_fit"></div><div><label>رمز اولیه (حداقل ۱۰ کاراکتر)</label><input type="password" name="password" minlength="10" required autocomplete="new-password"></div><div><label>رشته اصلی</label>'+sportSelect('بدنسازی')+'</div></div><div class="form-row"><button class="btn btn-primary" type="submit">ثبت ورزشکار ←</button></div></form><p class="footnote">رمز را به‌صورت خصوصی به ورزشکار بدهید. ثبت‌نام شخصی از صفحه اصلی نیز فعال است.</p></div>';
  $('admin-view').innerHTML='<div class="layout-two"><div class="dash-card"><div class="card-head"><h3>فهرست ورزشکاران · '+n(a.members.length)+'</h3><span class="live-badge">MEMBER RECORDS</span></div>'+(a.members.length?shortTableMembers(a.members):blank('فهرست ورزشکاران خالی است'))+'</div>'+form+'</div><div id="person-detail" class="admin-detail"></div>';
@@ -170,7 +170,7 @@ function renderAdminSettings(){
  box.innerHTML=data.logs.length?table(['اقدام','شناسه ثبت','تاریخ'],data.logs.map(x=>'<tr><td>'+h(titles[x.action]||x.action)+'</td><td>'+n(x.record_id)+'</td><td>'+when(x.created_at)+'</td></tr>')):blank('سابقه‌ای ثبت نشده است');}).catch(()=>{const box=$('ug-audit-list');if(box)box.innerHTML=blank('دریافت گزارش ممکن نشد')});
 }
 function renderAdminAttendance(){
- const rows=S.admin.bookings.map(x=>'<tr><td>'+h(x.full_name)+'</td><td>'+h(x.title)+'</td><td>'+dt(x.class_date)+'</td><td>'+chip(x.status)+'</td><td><select class="booking-status" data-booking="'+x.id+'"><option value="booked" '+(x.status==='booked'?'selected':'')+'>رزرو شده</option><option value="attended" '+(x.status==='attended'?'selected':'')+'>حاضر</option><option value="cancelled" '+(x.status==='cancelled'?'selected':'')+'>لغو</option></select></td></tr>');
+ const rows=S.admin.bookings.map(x=>'<tr><td>'+h(x.full_name)+'</td><td>'+h(x.title)+'</td><td>'+dt(x.class_date)+'</td><td>'+chip(x.status)+'</td><td><select class="booking-status" data-booking="'+x.id+'"><option value="booked" '+(x.status==='booked'?'selected':'')+'>رزرو شده</option><option value="attended" '+(x.status==='attended'?'selected':'')+'>حاضر</option><option value="cancelled" '+(x.status==='cancelled'?'selected':'')+'>لغو</option><option value="absent" '+(x.status==='absent'?'selected':'')+'>غیبت ثبت‌شده</option></select></td></tr>');
  $('admin-view').innerHTML='<div class="dash-card"><div class="card-head"><h3>رزروها و حضور و غیاب</h3><span class="live-badge">LIVE BOOKING RECORDS</span></div>'+(rows.length?table(['ورزشکار','کلاس','تاریخ','وضعیت','تغییر وضعیت'],rows):blank('هنوز رزروی ثبت نشده است'))+'</div>';
 }
 function renderAdmin(){
@@ -291,5 +291,5 @@ if('serviceWorker' in navigator){
  navigator.serviceWorker.addEventListener('controllerchange',notifyUpgrade);
  window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').then(reg=>reg.update()).catch(()=>{}));
 }
-boot();
+document.addEventListener('DOMContentLoaded',boot);
 })();
