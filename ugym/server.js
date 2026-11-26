@@ -236,9 +236,9 @@ async function handler(req,res){
         if(!person.rows.length)return fail(res,404,'ورزشکار پیدا نشد');return send(res,200,{user:person.rows[0],measurements:m.rows,payments:p.rows,bookings:bk.rows});
       }
       if(p==='/api/admin/member/create'&&req.method==='POST'){
-        const full_name=clean(b.full_name,120),email=clean(b.email,180).toLowerCase(),password=String(b.password||''),discipline=clean(b.discipline,40);
-        if(full_name.length<2||!validEmail(email)||password.length<10||!['پیلاتس','ایروبیک','بدنسازی','TRX'].includes(discipline))return fail(res,400,'اطلاعات ورزشکار معتبر نیست');
-        try{const r=await pool.query("INSERT INTO ug_users(role,full_name,email,password_hash,discipline) VALUES('member',$1,$2,$3,$4) RETURNING id",[full_name,email,pwHash(password),discipline]);await audit(u.id,'member_created',Number(r.rows[0].id),{discipline});return send(res,201,{ok:true,id:r.rows[0].id});}catch(e){if(e.code==='23505')return fail(res,409,'ایمیل تکراری است');throw e;}
+        const full_name=clean(b.full_name,120),email=clean(b.email,180).toLowerCase(),password=String(b.password||''),discipline=clean(b.discipline,40),username=clean(b.username,32).toLowerCase();
+        if(full_name.length<2||!validEmail(email)||!(/^[a-z][a-z0-9_]{2,31}$/.test(username))||password.length<10||!['پیلاتس','ایروبیک','بدنسازی','TRX'].includes(discipline))return fail(res,400,'اطلاعات ورزشکار معتبر نیست');
+        try{const r=await pool.query("INSERT INTO ug_users(role,full_name,email,username,password_hash,discipline) VALUES('member',$1,$2,$3,$4,$5) RETURNING id",[full_name,email,username,pwHash(password),discipline]);await audit(u.id,'member_created',Number(r.rows[0].id),{discipline});return send(res,201,{ok:true,id:r.rows[0].id});}catch(e){if(e.code==='23505')return fail(res,409,'نام کاربری یا ایمیل تکراری است');throw e;}
       }
       if(p==='/api/admin/member/update'&&req.method==='POST'){
         if(!idok(b.user_id)||!['پیلاتس','ایروبیک','بدنسازی','TRX'].includes(b.discipline))return fail(res,400,'اطلاعات نامعتبر');
