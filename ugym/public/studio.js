@@ -77,7 +77,28 @@
    '<div class="ug-coach-columns"><div class="dash-card"><h3>پیام جدید</h3><form data-studio-form="notice" class="ug-coach-form"><label>گیرنده</label><select name="user_id"><option value="">همه ورزشکاران</option>'+members.map(m=>'<option value="'+m.id+'">'+esc(m.full_name)+'</option>').join('')+'</select><label>نوع اعلان</label><select name="kind"><option value="general">اطلاعیه عمومی</option><option value="payment">یادآوری شهریه</option><option value="attendance">یادآوری حضور</option><option value="training">برنامه تمرین</option></select><label>عنوان</label>'+field('title','','text','required maxlength="90" placeholder="مثلاً تغییر ساعت کلاس"')+'<label>متن پیام</label><textarea rows="4" name="body" required maxlength="750" placeholder="پیام برای ورزشکاران"></textarea><button type="submit" class="btn btn-primary">ارسال به صندوق اعضا ←</button></form><p class="footnote">این اعلان‌ها داخل اپ هستند و فعلاً پیامک، پوش بیرون از اپ یا واتساپ خودکار ارسال نمی‌کنند.</p></div>'+
    '<div class="dash-card"><h3>اعلان‌های اخیر</h3>'+(list||empty('هنوز اعلانی منتشر نشده است.'))+'</div></div>';
  }
- function memberTraining(data){/* MEMBER_TRAINING */ }
+ function memberTraining(data){
+  const out=$('member-view'),plan=data.plan;
+  if(!plan){out.innerHTML=header('برنامه تمرین من','پس از تنظیم و انتشار برنامه توسط مربی، حرکت‌ها و راهنمای تصویری اینجا نمایش داده می‌شوند.')+empty('هنوز برنامه تمرینی فعالی برای شما منتشر نشده است.');return;}
+  const today=iso(),days=[...new Set(data.items.map(x=>x.day_label))],active=days.includes(state.day)?state.day:days[0];state.day=active;
+  const dayTabs=days.map(x=>'<button type="button" class="'+(x===active?'active':'')+'" data-studio-day="'+esc(x)+'">'+esc(x)+'</button>').join('');
+  const items=data.items.filter(x=>x.day_label===active).map((ex,i)=>{
+   const log=data.logs.find(x=>String(x.plan_item_id)===String(ex.id)&&String(x.performed_on).slice(0,10)===today);
+   return '<article class="ug-movement-card">'+movement(ex)+'<div class="ug-movement-body"><span class="ug-move-tag">'+esc(ex.discipline)+' · '+esc(active)+'</span><h3>'+esc(ex.name_fa)+'</h3>'+
+    '<div class="ug-rx"><span>'+fa(ex.sets)+' ست</span><span>'+esc(ex.reps)+' تکرار / زمان</span><span>'+fa(ex.rest_seconds)+' ثانیه استراحت</span></div>'+
+    instruction(ex)+(ex.coach_note?'<div class="ug-coach-memo">✦ نکته مربی: '+esc(ex.coach_note)+'</div>':'')+
+    '<form data-studio-form="log" class="ug-coach-form"><h4>ثبت عملکرد من</h4>'+field('plan_item_id',ex.id,'hidden')+
+    '<div class="field-grid"><div><label>تاریخ تمرین</label>'+field('performed_on',today,'date','required')+'</div><div><label>ست انجام‌شده</label>'+field('completed_sets',log?.completed_sets??ex.sets,'number','required min="0" max="'+ex.sets+'"')+'</div><div><label>تکرار واقعی</label>'+field('actual_reps',log?.actual_reps||ex.reps,'text','maxlength="40"')+'</div><div><label>وزنه (کیلوگرم)</label>'+field('weight_kg',log?.weight_kg??'','number','min="0" max="400" step=".25"')+'</div><div><label>درجه سختی /۱۰</label>'+field('difficulty',log?.difficulty??'','number','min="1" max="10"')+'</div></div>'+
+    '<label>یادداشت اجرا</label>'+field('note',log?.note??'','text','maxlength="250" placeholder="مثلاً ست آخر سخت بود"')+
+    '<button type="submit" class="btn btn-primary">'+(log?'به‌روزرسانی اجرای امروز ✓':'ثبت تمرین انجام‌شده ✓')+'</button></form></div></article>';
+  }).join('');
+  const uniqueDays=new Set(data.logs.map(x=>String(x.performed_on).slice(0,10))).size;
+  out.innerHTML=header(plan.title,plan.goal||'برنامه اختصاصی تو آماده است.')+
+   (plan.coach_note?'<div class="ug-coach-memo ug-full-note">✦ پیام مربی: '+esc(plan.coach_note)+'</div>':'')+
+   '<div class="ug-studio-kpis"><div><span>حرکت برنامه</span><strong>'+fa(data.items.length)+'</strong></div><div><span>روزهای تمرین ثبت‌شده</span><strong>'+fa(uniqueDays)+'</strong></div><div><span>جلسه‌های برنامه</span><strong>'+fa(days.length)+'</strong></div></div>'+
+   '<div class="ug-day-tabs">'+dayTabs+'</div><div class="ug-member-movements">'+items+'</div>'+
+   '<p class="ug-source-note">تصاویر صرفاً شروع و پایان حرکت را نشان می‌دهند و جایگزین آموزش حضوری مربی نیستند. تصاویر آموزشی CC0 از <a target="_blank" rel="noopener noreferrer" href="'+source+'">کتابخانه حرکات</a> هستند.</p>';
+ }
  function memberNutrition(data){/* MEMBER_NUTRITION */ }
  function memberNotices(data){/* MEMBER_NOTICES */ }
  function mountSelfMeasure(){/* SELF_MEASURE */ }
