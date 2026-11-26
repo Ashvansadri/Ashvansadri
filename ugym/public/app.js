@@ -45,13 +45,13 @@ function authPage(mode){
  $('auth-title').textContent=setup?'ساخت حساب مدیریت':reg?'به UGYM خوش آمدی!':'خوش برگشتی!';
  $('auth-subtitle').textContent=setup?'نام کاربری و رمز دلخواه خودت را انتخاب کن؛ این دعوت‌نامه فقط یک بار معتبر است.':reg?'اطلاعاتت را وارد کن و مسیرت را شروع کن.':'با نام کاربری یا ایمیل و رمز عبور وارد شو.';
  $('auth-name-box').hidden=!(reg||setup);$('auth-sport-box').hidden=!reg;
- $('setup-username-box').hidden=!setup;
+ $('setup-username-box').hidden=!(setup||reg);
  $('auth-identifier-box').hidden=reg||setup;
  $('auth-email-box').hidden=!(reg||setup);
  $('auth-form').reset();
  $('auth-form').querySelector('input[name=identifier]').required=!(reg||setup);
  $('auth-form').querySelector('input[name=email]').required=reg||setup;
- $('auth-form').querySelector('input[name=username]').required=setup;
+ $('auth-form').querySelector('input[name=username]').required=setup||reg;
  $('auth-form').querySelector('input[name=full_name]').required=reg||setup;
  $('auth-form').querySelector('input[name=password]').setAttribute('autocomplete',reg||setup?'new-password':'current-password');
  $('auth-submit').textContent=setup?'ایجاد حساب مدیریت ←':reg?'ثبت‌نام ورزشکار ←':'ورود به حساب ←';
@@ -118,7 +118,7 @@ function progressHighlights(measurements){
 }
 function timeline(measurements){return measurements.length?'<div class="timeline">'+measurements.slice().reverse().slice(0,12).map((m,i)=>'<div class="timeline-item"><strong>'+(i===0?'آخرین ارزیابی · ':'ارزیابی · ')+dt(m.measured_at)+'</strong><p>'+METRICS.filter(k=>m[k[0]]!==null).map(k=>k[1]+': '+n(m[k[0]])+' '+k[2]).join(' | ')+'</p>'+(m.note?'<div class="note-card">'+h(m.note)+'</div>':'')+'</div>').join('')+'</div>':blank('برای شما هنوز اندازه‌گیری ثبت نشده است');}
 function renderAdminMembers(){
- const a=S.admin;let form='<div class="dash-card"><h3>ثبت ورزشکار جدید</h3><form data-form="member-create"><div class="field-grid"><div><label>نام کامل</label><input name="full_name" required placeholder="نام ورزشکار"></div><div><label>ایمیل ورود</label><input name="email" type="email" required placeholder="member@example.com"></div><div><label>رمز اولیه (حداقل ۱۰ کاراکتر)</label><input type="password" name="password" minlength="10" required autocomplete="new-password"></div><div><label>رشته اصلی</label>'+sportSelect('بدنسازی')+'</div></div><div class="form-row"><button class="btn btn-primary" type="submit">ثبت ورزشکار ←</button></div></form><p class="footnote">رمز را به‌صورت خصوصی به ورزشکار بدهید. ثبت‌نام شخصی از صفحه اصلی نیز فعال است.</p></div>';
+ const a=S.admin;let form='<div class="dash-card"><h3>ثبت ورزشکار جدید</h3><form data-form="member-create"><div class="field-grid"><div><label>نام کامل</label><input name="full_name" required placeholder="نام ورزشکار"></div><div><label>ایمیل ورود</label><input name="email" type="email" required placeholder="member@example.com"></div><div><label>نام کاربری انگلیسی</label><input name="username" required minlength="3" maxlength="32" pattern="[a-zA-Z][a-zA-Z0-9_]{2,31}" placeholder="مثلاً sara_fit"></div><div><label>رمز اولیه (حداقل ۱۰ کاراکتر)</label><input type="password" name="password" minlength="10" required autocomplete="new-password"></div><div><label>رشته اصلی</label>'+sportSelect('بدنسازی')+'</div></div><div class="form-row"><button class="btn btn-primary" type="submit">ثبت ورزشکار ←</button></div></form><p class="footnote">رمز را به‌صورت خصوصی به ورزشکار بدهید. ثبت‌نام شخصی از صفحه اصلی نیز فعال است.</p></div>';
  $('admin-view').innerHTML='<div class="layout-two"><div class="dash-card"><div class="card-head"><h3>فهرست ورزشکاران · '+n(a.members.length)+'</h3><span class="live-badge">MEMBER RECORDS</span></div>'+(a.members.length?shortTableMembers(a.members):blank('فهرست ورزشکاران خالی است'))+'</div>'+form+'</div><div id="person-detail" class="admin-detail"></div>';
  if(S.person)renderPersonDetail();
 }
@@ -126,7 +126,7 @@ function renderPersonDetail(){
  const p=S.person;if(!p)return;
  const u=p.user;
  const records=p.measurements;
- const c='<div class="admin-detail-head"><div><span class="kicker">INDIVIDUAL PERFORMANCE FILE</span><h2>پرونده '+h(u.full_name)+'</h2><span class="caption">'+h(u.email)+' · '+h(u.discipline)+'</span></div><button class="mini-btn" data-action="close-person">بستن پرونده ×</button></div>';
+ const c='<div class="admin-detail-head"><div><span class="kicker">INDIVIDUAL PERFORMANCE FILE</span><h2>پرونده '+h(u.full_name)+'</h2><span class="caption">'+h(u.email)+' · '+h(u.discipline)+'</span></div><div class="form-row"><button class="btn btn-primary" type="button" data-coach-member="'+u.id+'">برنامه تمرینی و غذایی ←</button><button class="mini-btn" data-action="close-person">بستن پرونده ×</button></div></div>';
  $('person-detail').innerHTML=c+'<div class="layout-equal section-gap"><div class="dash-card"><h3>اطلاعات و هدف ورزشکار</h3><form data-form="person-update"><input type="hidden" name="user_id" value="'+u.id+'"><div class="field-grid"><div><label>رشته</label>'+sportSelect(u.discipline)+'</div><div><label>قد (سانتی‌متر)</label><input type="number" step=".1" min="0" max="260" name="height_cm" value="'+h(u.height_cm??'')+'"></div></div><label>هدف و یادداشت مربی</label><textarea name="goal" rows="2" placeholder="هدف اصلی و نکات تمرینی">'+h(u.goal)+'</textarea><div class="form-row"><button class="mini-btn" type="submit">ذخیره هدف و اطلاعات</button></div></form></div><div class="dash-card"><h3>ثبت ارزیابی بدنی</h3><form data-form="measurement"><input type="hidden" name="user_id" value="'+u.id+'"><div class="field-grid cols3"><div><label>تاریخ</label><input type="date" name="measured_at" value="'+fmt(new Date())+'" required></div><div><label>وزن kg</label><input type="number" name="weight_kg" min="0" max="500" step=".01"></div><div><label>چربی ٪</label><input type="number" name="body_fat_pct" min="0" max="100" step=".01"></div><div><label>دور کمر cm</label><input type="number" name="waist_cm" min="0" max="400" step=".01"></div><div><label>عملکرد /100</label><input type="number" name="performance_score" min="0" max="100" step=".01"></div></div><label>یادداشت مربی</label><input name="note" placeholder="مثلاً بهبود تعادل و فرم حرکت"><div class="form-row"><button class="btn btn-primary" type="submit">ثبت ارزیابی جدید ←</button></div></form></div></div>'+
  '<div class="layout-equal section-gap"><div class="dash-card"><h3>نمودار رشد اختصاصی</h3>'+metricButtons()+chart(records,S.metric)+'</div><div class="dash-card"><h3>تاریخچه ارزیابی‌ها</h3>'+timeline(records)+'</div></div>'+
  '<div class="dash-card section-gap"><h3>ثبت شهریه یا بدهی</h3><form data-form="payment"><input name="user_id" type="hidden" value="'+u.id+'"><div class="field-grid cols4"><div><label>مبلغ (تومان)</label><input type="number" min="1" step="1" max="1000000000000" name="amount_toman" required placeholder="مثلاً 1500000"></div><div><label>وضعیت</label><select name="status"><option value="pending">در انتظار پرداخت</option><option value="paid">پرداخت‌شده</option></select></div><div><label>روش</label><select name="method"><option>کارت‌به‌کارت</option><option>نقدی</option><option>انتقال بانکی</option><option>کارتخوان</option></select></div><div><label>موعد پرداخت (اختیاری)</label><input type="date" name="due_date"></div></div><label>شرح</label><input name="note" placeholder="مثلاً شهریه دوره آبان"><div class="form-row"><button class="btn btn-primary" type="submit">ثبت در دفتر مالی ←</button></div></form></div>';
@@ -174,13 +174,14 @@ function renderAdminAttendance(){
  $('admin-view').innerHTML='<div class="dash-card"><div class="card-head"><h3>رزروها و حضور و غیاب</h3><span class="live-badge">LIVE BOOKING RECORDS</span></div>'+(rows.length?table(['ورزشکار','کلاس','تاریخ','وضعیت','تغییر وضعیت'],rows):blank('هنوز رزروی ثبت نشده است'))+'</div>';
 }
 function renderAdmin(){
- const heads={overview:'نمای کلی باشگاه',members:'مدیریت ورزشکاران',classes:'برنامه و کلاس‌ها',payments:'شهریه‌ها و امور مالی',attendance:'حضور و غیاب',settings:'تنظیمات باشگاه'};
+ const heads={overview:'نمای کلی باشگاه',members:'مدیریت ورزشکاران',classes:'برنامه و کلاس‌ها',payments:'شهریه‌ها و امور مالی',attendance:'حضور و غیاب',settings:'تنظیمات باشگاه',studio:'استودیو مربی',notices:'اعلان‌های باشگاه'};
  $('admin-heading').textContent=heads[S.tab];setActive('#admin-nav [data-tab]','tab',S.tab);
  if(S.tab==='overview')renderAdminOverview();
  else if(S.tab==='members')renderAdminMembers();
  else if(S.tab==='classes')renderAdminClasses();
  else if(S.tab==='payments')renderAdminPayments();
  else if(S.tab==='settings')renderAdminSettings();
+ else if(S.tab==='studio'||S.tab==='notices')window.UGYMStudio?.renderAdmin(S.tab);
  else renderAdminAttendance();
 }
 async function loadAdmin(){const [overview,config]=await Promise.all([api('/api/admin/overview'),api('/api/public/payment-info')]);S.admin=overview;S.payConfig=config.payment;if(S.selected){try{S.person=await api('/api/admin/member?id='+S.selected);}catch{S.selected=null;S.person=null;}}renderAdmin();}
@@ -217,11 +218,12 @@ function renderMemberAccount(){
  '<div class="dash-card"><h3>تغییر رمز عبور</h3><form data-form="password"><label>رمز فعلی</label><input name="current_password" type="password" autocomplete="current-password" required><label>رمز جدید (حداقل ۱۲ کاراکتر)</label><input name="new_password" type="password" autocomplete="new-password" minlength="12" required><div class="form-row"><button class="btn btn-primary" type="submit">ثبت رمز جدید ←</button></div></form></div></div>';
 }
 function renderMember(){
- const heads={progress:'مسیر پیشرفت من',classes:'رزرو و برنامه کلاس‌ها',payments:'شهریه‌ها و پرداخت‌ها',account:'تنظیمات حساب'};
+ const heads={progress:'مسیر پیشرفت من',classes:'رزرو و برنامه کلاس‌ها',payments:'شهریه‌ها و پرداخت‌ها',account:'تنظیمات حساب',training:'برنامه تمرین من',nutrition:'راهنمای تغذیه',notices:'اعلان‌های من'};
  $('member-heading').textContent=heads[S.memberTab];setActive('#member-nav [data-member-tab]','memberTab',S.memberTab);
- if(S.memberTab==='progress')renderMemberProgress();
+ if(S.memberTab==='progress'){renderMemberProgress();window.UGYMStudio?.mountSelfMeasure();}
  else if(S.memberTab==='classes')renderMemberClasses();
  else if(S.memberTab==='account')renderMemberAccount();
+ else if(['training','nutrition','notices'].includes(S.memberTab))window.UGYMStudio?.renderMember(S.memberTab);
  else renderMemberPayments();
 }
 async function loadMember(){const [member,config]=await Promise.all([api('/api/member/dashboard'),api('/api/public/payment-info')]);S.member=member;S.payConfig=config.payment;renderMember();}
@@ -246,7 +248,7 @@ document.addEventListener('submit',async function(ev){
  }catch(e){if(form.id==='auth-form'){$('auth-error').textContent=e.message;$('auth-error').hidden=false;}else flash(e.message,true);}finally{if(b)b.disabled=false;}
 });
 document.addEventListener('click',async function(ev){
- const t=ev.target.closest('[data-tab],[data-member-tab],[data-person],[data-metric],[data-action],[data-book],[data-cancel],[data-pay],[data-receipt],[data-copy-card]');
+ const t=ev.target.closest('[data-tab],[data-member-tab],[data-person],[data-coach-member],[data-metric],[data-action],[data-book],[data-cancel],[data-pay],[data-receipt],[data-copy-card]');
  if(!t)return;
  try{
   if(t.hasAttribute('data-copy-card')){
@@ -259,6 +261,7 @@ document.addEventListener('click',async function(ev){
    await api('/api/member/payment/receipt-notice',{payment_id:Number(t.dataset.receipt)});
    flash('اعلام ارسال رسید ثبت شد. منتظر تأیید مدیر باش.');await loadMember();return;
   }
+  if(t.dataset.coachMember){window.UGYMStudio?.setAthlete(t.dataset.coachMember);S.tab='studio';renderAdmin();return;}
   if(t.dataset.tab){S.tab=t.dataset.tab;S.selected=null;S.person=null;renderAdmin();return;}
   if(t.dataset.memberTab){S.memberTab=t.dataset.memberTab;renderMember();return;}
   if(t.dataset.metric){S.metric=t.dataset.metric;if(!$('page-member').hidden)renderMember();else renderPersonDetail();return;}
@@ -275,6 +278,7 @@ document.addEventListener('change',async function(ev){
  const t=ev.target.closest('[data-booking]');if(!t)return;
  try{await api('/api/admin/booking/status',{booking_id:Number(t.dataset.booking),status:t.value});flash('وضعیت حضور ذخیره شد');await loadAdmin();}catch(e){flash(e.message,true);}
 });
+window.UGYMBridge={api,toast:flash,state:()=>S,reloadMember:loadMember,reloadAdmin:loadAdmin,selectMember:id=>{S.selected=id;S.tab='studio';renderAdmin();}};
 if('serviceWorker' in navigator){
  let alreadyNotified=false;
  function notifyUpgrade(){
