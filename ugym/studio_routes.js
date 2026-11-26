@@ -102,6 +102,15 @@ module.exports = async function handleStudio({req,res,path:route,body:b,pool,aut
   await audit(u.id,'exercise_assigned',Number(result.rows[0].id),{plan:planId});
   send(res,201,{ok:true,id:result.rows[0].id});return true;
  }
+ if(route==='/api/v2/admin/plan/item/remove'&&req.method==='POST'){
+  const item=id(b.item_id);if(!item)return error(400,'شناسه حرکت معتبر نیست');
+  const used=await pool.query('SELECT COUNT(*)::int AS n FROM ug_workout_logs WHERE plan_item_id=$1',[item]);
+  if(used.rows[0].n>0)return error(409,'برای حفظ تاریخچه تمرین‌های ثبت‌شده، این حرکت قابل حذف نیست. برنامه جدید بساز.');
+  const result=await pool.query("DELETE FROM ug_training_plan_items i USING ug_training_plans p WHERE i.id=$1 AND p.id=i.plan_id AND p.status IN('draft','active') RETURNING i.id,i.plan_id",[item]);
+  if(!result.rowCount)return error(404,'حرکت قابل حذف پیدا نشد');
+  await audit(u.id,'plan_item_removed',item,{plan:result.rows[0].plan_id});
+  send(res,200,{ok:true});return true;
+ }
  if(route==='/api/v2/admin/plan/activate'&&req.method==='POST'){
   const planId=id(b.plan_id);if(!planId)return error(400,'شناسه نامعتبر');
   const client=await pool.connect();let who;
