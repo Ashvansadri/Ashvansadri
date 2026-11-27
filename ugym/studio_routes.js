@@ -7,13 +7,16 @@ module.exports = async function handleStudio({req,res,path:route,body:b,pool,aut
  const validDate=(v)=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(String(v||'')))return false;const d=new Date(v+'T00:00:00Z');return !isNaN(d.valueOf())&&d.toISOString().slice(0,10)===v;};
  const error=(n,msg)=>{fail(res,n,msg);return true;};
  const allowed=(r)=>['بدنسازی','پیلاتس','ایروبیک','TRX'].includes(r);
- const getMember=async(i)=>{const r=await pool.query("SELECT id,full_name,email,discipline,goal,height_cm FROM ug_users WHERE id=$1 AND role='member'",[i]);return r.rows[0]||null;};
+ const getMember=async(i)=>{if(!await assigned(i))return null;const r=await pool.query("SELECT id,full_name,email,discipline,goal,height_cm FROM ug_users WHERE id=$1 AND role='member'",[i]);return r.rows[0]||null;};
  const exercises=()=>pool.query("SELECT id,slug,name_fa,discipline,target,equipment,instructions,caution,image_start,image_end,media_license,media_source FROM ug_exercises WHERE is_active=true ORDER BY discipline,name_fa LIMIT 150");
  if(route==='/api/v2/exercises'&&req.method==='GET'){
   const r=await exercises();send(res,200,{exercises:r.rows});return true;
  }
  const u=await auth(req);if(!u)return error(401,'لطفاً ابتدا وارد حساب خود شوید');
- const member=u.role==='member',admin=u.role==='admin';
+ const member=u.role==='member',admin=u.role==='admin',coach=u.role==='coach';
+ const assigned=async who=>{if(admin)return true;if(!coach)return false;const r=await pool.query('SELECT 1 FROM ug_coach_assignments WHERE coach_id=$1 AND user_id=$2',[u.id,who]);return r.rowCount>0;};
+ const ownsPlan=async planId=>{const r=await pool.query('SELECT user_id FROM ug_training_plans WHERE id=$1',[planId]);return r.rowCount>0&&await assigned(r.rows[0].user_id);};
+ const ownsItem=async itemId=>{const r=await pool.query('SELECT p.user_id FROM ug_training_plan_items i JOIN ug_training_plans p ON p.id=i.plan_id WHERE i.id=$1',[itemId]);return r.rowCount>0&&await assigned(r.rows[0].user_id);};
  const getProgram=async(userId,adminView=false)=>{
   const plans=await pool.query("SELECT id,user_id,title,goal,coach_note,start_date,end_date,status,created_at,updated_at FROM ug_training_plans WHERE user_id=$1 ORDER BY CASE status WHEN 'active' THEN 0 WHEN 'draft' THEN 1 ELSE 2 END,updated_at DESC LIMIT 30",[userId]);
   let active=plans.rows.find(x=>x.status==='active')||null;
@@ -78,7 +81,7 @@ module.exports = async function handleStudio({req,res,path:route,body:b,pool,aut
   const ok=await pool.query("INSERT INTO ug_notice_reads(notice_id,user_id) SELECT id,$2 FROM ug_notices WHERE id=$1 AND (user_id IS NULL OR user_id=$2) ON CONFLICT DO NOTHING RETURNING notice_id",[b.notice_id,u.id]);
   send(res,200,{ok:ok.rowCount>0});return true;
  }
- if(!admin)return error(403,'فقط مدیریت اجازه دسترسی دارد');
+ if(!admin&&!coach)return error(403,'فقط مدیریت و مربی مجازند');
  const params=new URL(req.url,'http://x').searchParams;
  if(route==='/api/v2/admin/studio'&&req.method==='GET'){
   const who=id(params.get('user_id'));if(!who)return error(400,'شناسه ورزشکار معتبر نیست');
@@ -96,6 +99,7 @@ module.exports = async function handleStudio({req,res,path:route,body:b,pool,aut
  if(route==='/api/v2/admin/plan/item'&&req.method==='POST'){
   const planId=id(b.plan_id),exId=id(b.exercise_id),sets=Number(b.sets),rest=Number(b.rest_seconds),sort=Number(b.sort_order??0),day=clip(b.day_label,22),reps=clip(b.reps,25);
   if(!planId||!exId||!/^روز [۱-۷1-7]$/.test(day)||!Number.isInteger(sets)||sets<1||sets>20||!Number.isInteger(rest)||rest<0||rest>900||!Number.isInteger(sort)||sort<0||sort>500||!reps)return error(400,'روز، ست، تکرار یا زمان استراحت معتبر نیست');
+  if(!await ownsPlan(planId))return error(403,'این برنامه مربوط به ورزشکاران شما نیست');
   const plan=await pool.query("SELECT id FROM ug_training_plans WHERE id=$1 AND status IN('draft','active')",[planId]);
   if(!plan.rowCount)return error(404,'برنامه فعال یا پیش‌نویس پیدا نشد');
   const ex=await pool.query('SELECT id FROM ug_exercises WHERE id=$1 AND is_active=true',[exId]);if(!ex.rowCount)return error(404,'حرکت یافت نشد');
@@ -106,6 +110,7 @@ module.exports = async function handleStudio({req,res,path:route,body:b,pool,aut
  }
  if(route==='/api/v2/admin/plan/item/remove'&&req.method==='POST'){
   const item=id(b.item_id);if(!item)return error(400,'شناسه حرکت معتبر نیست');
+  if(!await ownsItem(item))return error(403,'این حرکت مربوط به ورزشکاران شما نیست');
   const used=await pool.query('SELECT COUNT(*)::int AS n FROM ug_workout_logs WHERE plan_item_id=$1',[item]);
   if(used.rows[0].n>0)return error(409,'برای حفظ تاریخچه تمرین‌های ثبت‌شده، این حرکت قابل حذف نیست. برنامه جدید بساز.');
   const result=await pool.query("DELETE FROM ug_training_plan_items i USING ug_training_plans p WHERE i.id=$1 AND p.id=i.plan_id AND p.status IN('draft','active') RETURNING i.id,i.plan_id",[item]);
@@ -115,6 +120,7 @@ module.exports = async function handleStudio({req,res,path:route,body:b,pool,aut
  }
  if(route==='/api/v2/admin/plan/activate'&&req.method==='POST'){
   const planId=id(b.plan_id);if(!planId)return error(400,'شناسه نامعتبر');
+  if(!await ownsPlan(planId))return error(403,'این برنامه مربوط به ورزشکاران شما نیست');
   const client=await pool.connect();let who;
   try{
    await client.query('BEGIN');
@@ -138,16 +144,19 @@ module.exports = async function handleStudio({req,res,path:route,body:b,pool,aut
  }
  if(route==='/api/v2/admin/measure/verify'&&req.method==='POST'){
   const measureId=id(b.measurement_id);if(!measureId)return error(400,'شناسه اندازه‌گیری معتبر نیست');
+  const m=await pool.query('SELECT user_id FROM ug_measurements WHERE id=$1',[measureId]);if(!m.rowCount||!await assigned(m.rows[0].user_id))return error(403,'این اندازه‌گیری به ورزشکاران شما تعلق ندارد');
   const r=await pool.query("UPDATE ug_measurements SET verified=true WHERE id=$1 AND source='member' AND verified=false RETURNING id,user_id",[measureId]);
   if(!r.rowCount)return error(404,'اندازه‌گیری تأییدنشده پیدا نشد');
   await audit(u.id,'measurement_verified',measureId,{athlete:r.rows[0].user_id});
   send(res,200,{ok:true});return true;
  }
  if(route==='/api/v2/admin/notices'&&req.method==='GET'){
+  if(!admin)return error(403,'ارسال اعلان عمومی فقط برای مدیریت است');
   const r=await pool.query("SELECT n.id,n.user_id,n.title,n.body,n.kind,n.created_at,CASE WHEN n.user_id IS NULL THEN 'همه ورزشکاران' ELSE u.full_name END AS audience FROM ug_notices n LEFT JOIN ug_users u ON u.id=n.user_id ORDER BY n.created_at DESC LIMIT 65");
   send(res,200,{notices:r.rows});return true;
  }
  if(route==='/api/v2/admin/notices'&&req.method==='POST'){
+  if(!admin)return error(403,'ارسال اعلان عمومی فقط برای مدیریت است');
   const who=b.user_id? id(b.user_id):null,title=clip(b.title,90),body=clip(b.body,750),kind=clip(b.kind,25);
   if(b.user_id&&!who||title.length<3||body.length<3||!['general','payment','attendance','training'].includes(kind))return error(400,'اطلاعات اعلان معتبر نیست');
   if(who&&!await getMember(who))return error(404,'ورزشکار پیدا نشد');
