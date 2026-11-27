@@ -32,6 +32,18 @@
  function status(p){return p.status==='active'?'فعال':p.status==='draft'?'پیش‌نویس':'بایگانی'}
  async function renderAdmin(which='studio'){state.mode=which;const serial=++state.serial;const out=$('admin-view');if(!out)return;out.innerHTML=empty('در حال دریافت اطلاعات...');try{if(which==='notices')await adminNotices(serial);else await adminPrograms(serial)}catch(e){if(serial===state.serial)out.innerHTML=empty(e.message);toast(e.message,true)}}
  async function renderMember(which='training'){state.mode=which;const serial=++state.serial;const out=$('member-view');if(!out)return;out.innerHTML=empty('در حال دریافت برنامه اختصاصی...');try{const data=await api('/api/v2/member/studio');if(serial!==state.serial)return;if(which==='nutrition')memberNutrition(data);else if(which==='notices')memberNotices(data);else memberTraining(data)}catch(e){if(serial===state.serial)out.innerHTML=empty(e.message);toast(e.message,true)}}
+ function trendChart(records,key,label,unit){
+  const values=records.filter(x=>x[key]!=null&&Number.isFinite(Number(x[key]))).sort((a,b)=>new Date(a.measured_at)-new Date(b.measured_at)).slice(-30);
+  if(values.length<2)return '<div class="ug-trend-empty">'+esc(label)+' · برای نمایش روند حداقل دو اندازه‌گیری لازم است.</div>';
+  const nums=values.map(x=>Number(x[key])),low=Math.min(...nums),high=Math.max(...nums);
+  const pts=nums.map((v,i)=>{const x=18+(i/(nums.length-1))*304,y=115-(high===low?0.5:(v-low)/(high-low))*92;return {x,y,v,verified:values[i].verified!==false}});
+  const path=pts.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' ');
+  const circles=pts.map(p=>'<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(p.verified?3.5:5)+'" fill="'+(p.verified?'#cfb0ff':'#eec584')+'" stroke="#21152f" stroke-width="1.5"/>').join('');
+  return '<div class="ug-trend"><div class="ug-trend-top"><b>'+esc(label)+'</b><span>'+fa(nums[nums.length-1])+' '+esc(unit)+'</span></div><svg viewBox="0 0 340 142" role="img" aria-label="نمودار '+esc(label)+'" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="115" x2="322" y2="115" stroke="#67577d" stroke-width="1"/><path d="'+path+'" stroke="#d7bbff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'+circles+'</svg><div class="ug-trend-foot"><span>'+date(values[0].measured_at)+'</span><span>'+date(values[values.length-1].measured_at)+'</span></div></div>';
+ }
+ function personalTrend(records){
+  return '<div class="ug-trend-grid">'+trendChart(records,'weight_kg','روند وزن','کیلوگرم')+trendChart(records,'waist_cm','دور کمر','سانتی‌متر')+trendChart(records,'body_fat_pct','درصد چربی','٪')+'</div><p class="tiny-muted">نقطه طلایی = داده خوداظهاری تأییدنشده؛ نقطه بنفش = داده تأییدشده.</p>';
+ }
  async function adminPrograms(serial){
   const members=B().state().admin?.members||[],out=$('admin-view');
   if(!members.length){out.innerHTML=header('استودیو مربی','ابتدا از بخش «ورزشکاران» اولین عضو را ثبت کن.')+'<button type="button" class="btn btn-primary" data-tab="members">ثبت ورزشکار ←</button>';return;}
@@ -65,7 +77,7 @@
   '<div class="ug-coach-columns"><div><section class="dash-card"><h3>برنامه‌های این ورزشکار</h3>'+plans+planForm+'</section>'+
   '<section class="dash-card section-gap">'+planDetail+'</section></div>'+
   '<div><section class="dash-card"><h3>توصیه غذایی اختصاصی</h3><p class="tiny-muted">برنامه غذایی با نظر مربی و متخصص واجدصلاحیت تنظیم شود.</p>'+nutrition+'</section>'+
-  '<section class="dash-card section-gap"><h3>اندازه‌گیری‌های منتظر تأیید</h3>'+(pending||empty('اندازه‌گیری منتظر بررسی وجود ندارد.'))+'</section>'+
+  '<section class="dash-card section-gap"><h3>نمودارهای پیشرفت ورزشکار</h3>'+personalTrend(detail.measurements)+'</section>'+ '<section class="dash-card section-gap"><h3>اندازه‌گیری‌های منتظر تأیید</h3>'+(pending||empty('اندازه‌گیری منتظر بررسی وجود ندارد.'))+'</section>'+
   '<section class="dash-card section-gap"><h3>عملکرد ثبت‌شده ورزشکار</h3>'+(logs||empty('هنوز اجرای تمرینی ثبت نشده است.'))+'</section></div></div>';
   preview();
  }
