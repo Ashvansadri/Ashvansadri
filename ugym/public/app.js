@@ -23,7 +23,7 @@ async function api(url,body){
 }
 function flash(msg,error){const t=$('toast');t.textContent=msg;t.hidden=false;t.style.borderColor=error?'#e97692':'#ab92eb';clearTimeout(flash.timer);flash.timer=setTimeout(()=>t.hidden=true,4300);}
 function show(page){['page-home','page-auth','page-admin','page-member'].forEach(id=>$(id).hidden=id!==page);document.body.classList.toggle('on-dashboard',page==='page-admin'||page==='page-member');}
-function header(){if(S.user){$('header-user').textContent='سلام، '+S.user.full_name;$('primary-action').href=S.user.role==='admin'?'/admin':'/member';$('primary-action').innerHTML='داشبورد من ←';}else{$('header-user').textContent='';$('primary-action').href='/login';$('primary-action').innerHTML='ورود به حساب ↗';}}
+function header(){if(S.user){$('header-user').textContent='سلام، '+S.user.full_name;$('primary-action').href=S.user.role==='admin'?'/admin':S.user.role==='coach'?'/coach':'/member';$('primary-action').innerHTML='داشبورد من ←';}else{$('header-user').textContent='';$('primary-action').href='/login';$('primary-action').innerHTML='ورود به حساب ↗';}}
 function setActive(selector,attr,v){document.querySelectorAll(selector).forEach(b=>b.classList.toggle('active',b.dataset[attr]===v));}
 function table(head,rows){return '<div class="table-scroll"><table class="data-table"><thead><tr>'+head.map(x=>'<th>'+h(x)+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table></div>';}
 function stats(arr){return '<div class="dash-grid">'+arr.map(a=>'<div class="stat-card"><div class="stat-label">'+h(a[0])+'</div><div class="stat-value">'+h(a[1])+'</div><div class="stat-hint">'+h(a[2])+'</div></div>').join('')+'</div>';}
@@ -38,27 +38,37 @@ function captureOwnerInvite(){
   return sessionStorage.getItem('ugym_owner_invite')||'';
  }catch{return'';}
 }
+function captureCoachInvite(){
+ try{
+  const p=new URLSearchParams(location.hash.replace(/^#/,'')),incoming=p.get('invite');
+  if(incoming&&/^[a-f0-9]{64}$/.test(incoming)){sessionStorage.setItem('ugym_coach_invite',incoming);history.replaceState(null,'',location.pathname);}
+  return sessionStorage.getItem('ugym_coach_invite')||'';
+ }catch{return ''}
+}
 function authPage(mode){
  show('page-auth');
- const setup=mode==='setup',reg=mode==='register',ownerInvite=setup?captureOwnerInvite():'';
- $('auth-kicker').textContent=setup?'UGYM / PRIVATE OWNER INVITE':'UGYM / ACCOUNT';
- $('auth-title').textContent=setup?'ساخت حساب مدیریت':reg?'به UGYM خوش آمدی!':'خوش برگشتی!';
- $('auth-subtitle').textContent=setup?'نام کاربری و رمز دلخواه خودت را انتخاب کن؛ این دعوت‌نامه فقط یک بار معتبر است.':reg?'اطلاعاتت را وارد کن و مسیرت را شروع کن.':'با نام کاربری یا ایمیل و رمز عبور وارد شو.';
- $('auth-name-box').hidden=!(reg||setup);$('auth-sport-box').hidden=!reg;
- $('setup-username-box').hidden=!(setup||reg);
- $('auth-identifier-box').hidden=reg||setup;
- $('auth-email-box').hidden=!(reg||setup);
+ const setup=mode==='setup',reg=mode==='register',coachJoin=mode==='coach-join',ownerInvite=setup?captureOwnerInvite():'',coachInvite=coachJoin?captureCoachInvite():'';
+ $('auth-kicker').textContent=coachJoin?'UGYM / COACH INVITATION':setup?'UGYM / PRIVATE OWNER INVITE':'UGYM / ACCOUNT';
+ $('auth-title').textContent=coachJoin?'ساخت حساب مربی UGYM':setup?'ساخت حساب مدیریت':reg?'به UGYM خوش آمدی!':'خوش برگشتی!';
+ $('auth-subtitle').textContent=coachJoin?'لینک خصوصی مدیر را باز کرده‌ای. نام کاربری و رمز اختصاصی‌ات را بساز.':setup?'نام کاربری و رمز دلخواه خودت را انتخاب کن؛ این دعوت‌نامه فقط یک بار معتبر است.':reg?'اطلاعاتت را وارد کن و مسیرت را شروع کن.':'با نام کاربری یا ایمیل و رمز عبور وارد شو.';
+ $('auth-name-box').hidden=!(reg||setup||coachJoin);$('auth-sport-box').hidden=!reg;
+ $('setup-username-box').hidden=!(setup||reg||coachJoin);
+ $('auth-identifier-box').hidden=reg||setup||coachJoin;
+ $('auth-email-box').hidden=!(reg||setup||coachJoin);
  $('auth-form').reset();
- $('auth-form').querySelector('input[name=identifier]').required=!(reg||setup);
- $('auth-form').querySelector('input[name=email]').required=reg||setup;
- $('auth-form').querySelector('input[name=username]').required=setup||reg;
- $('auth-form').querySelector('input[name=full_name]').required=reg||setup;
- $('auth-form').querySelector('input[name=password]').setAttribute('autocomplete',reg||setup?'new-password':'current-password');
- $('auth-submit').textContent=setup?'ایجاد حساب مدیریت ←':reg?'ثبت‌نام ورزشکار ←':'ورود به حساب ←';
- $('auth-switch').href=reg||setup?'/login':'/register';
- $('auth-switch').textContent=reg||setup?'قبلاً حساب ساخته‌ای؟ ورود':'حساب نداری؟ ثبت‌نام کن';
+ $('auth-form').querySelector('input[name=identifier]').required=!(reg||setup||coachJoin);
+ $('auth-form').querySelector('input[name=email]').required=reg||setup||coachJoin;
+ $('auth-form').querySelector('input[name=username]').required=setup||reg||coachJoin;
+ $('auth-form').querySelector('input[name=full_name]').required=reg||setup||coachJoin;
+ $('auth-form').querySelector('input[name=password]').setAttribute('autocomplete',reg||setup||coachJoin?'new-password':'current-password');
+ $('auth-submit').textContent=coachJoin?'ساخت حساب مربی ←':setup?'ایجاد حساب مدیریت ←':reg?'ثبت‌نام ورزشکار ←':'ورود به حساب ←';
+ $('auth-switch').href=reg||setup||coachJoin?'/login':'/register';
+ $('auth-switch').textContent=reg||setup||coachJoin?'قبلاً حساب ساخته‌ای؟ ورود':'حساب نداری؟ ثبت‌نام کن';
  $('auth-error').hidden=true;
  $('auth-submit').disabled=false;
+ if(coachJoin&&!coachInvite){$('auth-error').textContent='لینک دعوت مربی در این صفحه وجود ندارد یا معتبر نیست.';$('auth-error').hidden=false;$('auth-submit').disabled=true;}
+ if(coachJoin)$('auth-form').querySelector('input[name=password]').minLength=12;
+ else $('auth-form').querySelector('input[name=password]').minLength=10;
  if(setup){
   if(!ownerInvite){$('auth-error').textContent='این بخش فقط با لینک دعوت اختصاصی صاحب باشگاه فعال می‌شود.';$('auth-error').hidden=false;$('auth-submit').disabled=true;}
   api('/api/bootstrap-status').then(x=>{if(!x.needs_setup){$('auth-error').textContent='حساب مدیریت قبلاً ساخته شده است. از صفحه ورود استفاده کن.';$('auth-error').hidden=false;$('auth-submit').disabled=true;}}).catch(e=>flash(e.message,true));
@@ -174,7 +184,7 @@ function renderAdminAttendance(){
  $('admin-view').innerHTML='<div class="dash-card"><div class="card-head"><h3>رزروها و حضور و غیاب</h3><span class="live-badge">LIVE BOOKING RECORDS</span></div>'+(rows.length?table(['ورزشکار','کلاس','تاریخ','وضعیت','تغییر وضعیت'],rows):blank('هنوز رزروی ثبت نشده است'))+'</div>';
 }
 function renderAdmin(){
- const heads={overview:'نمای کلی باشگاه',members:'مدیریت ورزشکاران',classes:'برنامه و کلاس‌ها',payments:'شهریه‌ها و امور مالی',attendance:'حضور و غیاب',settings:'تنظیمات باشگاه',studio:'استودیو مربی',notices:'اعلان‌های باشگاه'};
+ const heads={overview:'نمای کلی باشگاه',members:'مدیریت ورزشکاران',classes:'برنامه و کلاس‌ها',payments:'شهریه‌ها و امور مالی',attendance:'حضور و غیاب',settings:'تنظیمات باشگاه',studio:'استودیو مربی',notices:'اعلان‌های باشگاه',coaches:'مدیریت مربیان',lockers:'مدیریت کمدها',integrations:'اتصال سرویس‌ها',reminders:'یادآوری‌های هوشمند','coach-account':'امنیت حساب مربی'};
  $('admin-heading').textContent=heads[S.tab];setActive('#admin-nav [data-tab]','tab',S.tab);
  if(S.tab==='overview')renderAdminOverview();
  else if(S.tab==='members')renderAdminMembers();
@@ -182,7 +192,18 @@ function renderAdmin(){
  else if(S.tab==='payments')renderAdminPayments();
  else if(S.tab==='settings')renderAdminSettings();
  else if(S.tab==='studio'||S.tab==='notices')window.UGYMStudio?.renderAdmin(S.tab);
+ else if(['coaches','lockers','integrations','reminders'].includes(S.tab)&&S.user?.role==='admin')window.UGYMOperations?.render(S.tab);
+ else if(S.tab==='coach-account'&&S.user?.role==='coach')renderCoachAccount();
  else renderAdminAttendance();
+}
+function renderCoachAccount(){
+ $('admin-view').innerHTML='<div class="welcome-banner premium-welcome"><span>UGYM · COACH SECURITY</span><h2>حساب مربی من</h2><p>ورود و برنامه‌نویسی فقط برای ورزشکاران واگذارشده امکان‌پذیر است.</p></div><div class="dash-card"><h3>تغییر رمز مربی</h3><form data-form="password"><label>رمز فعلی</label><input name="current_password" type="password" autocomplete="current-password" required><label>رمز جدید (حداقل ۱۲ کاراکتر)</label><input name="new_password" type="password" autocomplete="new-password" minlength="12" required><button type="submit" class="btn btn-primary">ذخیره رمز جدید ←</button></form></div>';
+}
+async function loadCoach(){
+ const data=await api('/api/v3/coach/roster');
+ S.admin={members:data.members};
+ S.tab=S.tab==='coach-account'?'coach-account':'studio';
+ renderAdmin();
 }
 async function loadAdmin(){const [overview,config]=await Promise.all([api('/api/admin/overview'),api('/api/public/payment-info')]);S.admin=overview;S.payConfig=config.payment;if(S.selected){try{S.person=await api('/api/admin/member?id='+S.selected);}catch{S.selected=null;S.person=null;}}renderAdmin();}
 function renderMemberProgress(){
@@ -231,9 +252,19 @@ async function boot(){
  try{
   const result=await api('/api/me');S.user=result.user;header();
   const pathname=location.pathname;
-  if(pathname==='/login'||pathname==='/register'||pathname==='/setup'){authPage(pathname.slice(1));return;}
-  if(pathname==='/admin'){if(!S.user){location.replace('/login');return;}if(S.user.role!=='admin'){location.replace('/member');return;}show('page-admin');$('admin-person').textContent=S.user.full_name;await loadAdmin();return;}
-  if(pathname==='/member'){if(!S.user){location.replace('/login');return;}if(S.user.role!=='member'){location.replace('/admin');return;}show('page-member');$('member-person').textContent=S.user.full_name;S.classes=(await api('/api/classes')).classes;await loadMember();return;}
+  if(pathname==='/login'||pathname==='/register'||pathname==='/setup'||pathname==='/coach-join'){authPage(pathname.slice(1));return;}
+  if(pathname==='/admin'){if(!S.user){location.replace('/login');return;}if(S.user.role!=='admin'){location.replace(S.user.role==='coach'?'/coach':'/member');return;}show('page-admin');$('admin-person').textContent=S.user.full_name;await loadAdmin();return;}
+  if(pathname==='/member'){if(!S.user){location.replace('/login');return;}if(S.user.role!=='member'){location.replace(S.user.role==='coach'?'/coach':'/admin');return;}show('page-member');$('member-person').textContent=S.user.full_name;S.classes=(await api('/api/classes')).classes;await loadMember();return;}
+  if(pathname==='/coach'){
+   if(!S.user){location.replace('/login');return;}
+   if(S.user.role!=='coach'){location.replace(S.user.role==='admin'?'/admin':'/member');return;}
+   show('page-admin');$('admin-person').textContent=S.user.full_name;
+   $('admin-heading').textContent='استودیو مربی';
+   const nav=$('admin-nav');
+   for(const btn of nav.querySelectorAll('button[data-tab]'))btn.hidden=btn.dataset.tab!=='studio';
+   if(!nav.querySelector('[data-tab="coach-account"]'))nav.insertAdjacentHTML('beforeend','<button data-tab="coach-account"><span>♙</span>امنیت حساب</button>');
+   await loadCoach();return;
+  }
   show('page-home');
  }catch(e){flash('خطا در دریافت داده‌ها: '+e.message,true);}
 }
@@ -241,10 +272,12 @@ document.addEventListener('submit',async function(ev){
  const form=ev.target;if(form.id!=='auth-form'&&!form.dataset.form)return;ev.preventDefault();
  const d=Object.fromEntries(new FormData(form).entries()),kind=form.id==='auth-form'?location.pathname.slice(1):form.dataset.form;
  if(kind==='setup')d.invite=captureOwnerInvite();
- const routes={login:'/api/auth/login',register:'/api/auth/register',setup:'/api/bootstrap','member-create':'/api/admin/member/create','person-update':'/api/admin/member/update',measurement:'/api/admin/measurement',payment:'/api/admin/payment',settings:'/api/admin/settings',class:'/api/admin/class','class-update':'/api/admin/class/update',password:'/api/account/change-password'};
+ if(kind==='coach-join')d.invite=captureCoachInvite();
+ const routes={login:'/api/auth/login',register:'/api/auth/register',setup:'/api/bootstrap','coach-join':'/api/v3/coach/join','member-create':'/api/admin/member/create','person-update':'/api/admin/member/update',measurement:'/api/admin/measurement',payment:'/api/admin/payment',settings:'/api/admin/settings',class:'/api/admin/class','class-update':'/api/admin/class/update',password:'/api/account/change-password'};
  let b=form.querySelector('[type=submit]');if(b)b.disabled=true;
- try{const saved=await api(routes[kind],d);if(['login','register','setup'].includes(kind)){if(kind==='login'){const x=await api('/api/me');location.assign(x.user?.role==='admin'?'/admin':'/member');}else{if(kind==='setup'){try{sessionStorage.removeItem('ugym_owner_invite');}catch{}}location.assign(kind==='setup'?'/admin':'/member');}return;}
- flash('اطلاعات با موفقیت ذخیره شد');if(kind==='member-create'||kind==='measurement'||kind==='payment'||kind==='class'||kind==='password')form.reset();if(kind==='member-create'){S.tab='members';S.selected=saved.id;}if(S.user?.role==='member'){await loadMember();}else{await loadAdmin();}if(kind==='member-create'&&$('person-detail'))$('person-detail').scrollIntoView({behavior:'smooth',block:'start'});
+ try{const saved=await api(routes[kind],d);if(['login','register','setup','coach-join'].includes(kind)){if(kind==='login'){const x=await api('/api/me');location.assign(x.user?.role==='admin'?'/admin':x.user?.role==='coach'?'/coach':'/member');}else{if(kind==='setup'){try{sessionStorage.removeItem('ugym_owner_invite');}catch{}}if(kind==='coach-join'){try{sessionStorage.removeItem('ugym_coach_invite')}catch{}}
+ location.assign(kind==='setup'?'/admin':kind==='coach-join'?'/coach':'/member');}return;}
+ flash('اطلاعات با موفقیت ذخیره شد');if(kind==='member-create'||kind==='measurement'||kind==='payment'||kind==='class'||kind==='password')form.reset();if(kind==='member-create'){S.tab='members';S.selected=saved.id;}if(S.user?.role==='member'){await loadMember();}else if(S.user?.role==='coach'){await loadCoach();}else{await loadAdmin();}if(kind==='member-create'&&$('person-detail'))$('person-detail').scrollIntoView({behavior:'smooth',block:'start'});
  }catch(e){if(form.id==='auth-form'){$('auth-error').textContent=e.message;$('auth-error').hidden=false;}else flash(e.message,true);}finally{if(b)b.disabled=false;}
 });
 document.addEventListener('click',async function(ev){
