@@ -9,7 +9,7 @@ async function sendPush(pool,userId,notice){
  let sent=0;
  for(const sub of r.rows){
   try{
-   await wp.sendNotification({endpoint:sub.endpoint,keys:{p256dh:sub.p256dh,auth:sub.auth}},JSON.stringify({title:String(notice.title||'UGYM').slice(0,90),body:String(notice.body||'یک پیام جدید در باشگاه داری.').slice(0,200),url:'/member'}),{TTL:3600});
+   await wp.sendNotification({endpoint:sub.endpoint,keys:{p256dh:sub.p256dh,auth:sub.auth}},JSON.stringify({title:String(notice.title||'UGYM').slice(0,90),body:'پیام جدید باشگاه آماده است. برای مطالعه وارد پنل اختصاصی خود شو.',url:'/member'}),{TTL:3600});
    await pool.query('UPDATE ug_push_subscriptions SET last_success_at=NOW() WHERE id=$1',[sub.id]);sent++;
   }catch(e){if([404,410].includes(e.statusCode))await pool.query('DELETE FROM ug_push_subscriptions WHERE id=$1',[sub.id]);else console.error('UGYM push not delivered',e.statusCode||e.message);}
  }
@@ -37,6 +37,8 @@ async function handle({req,res,path:p,body:b,pool,auth,send,fail,audit}){
   if(!ready())return no(503,'سرویس پوش هنوز متصل نیست');
   const sub=b.subscription;
   if(!sub||typeof sub!=='object'||!/^https:\/\//.test(String(sub.endpoint||''))||String(sub.endpoint).length>1200||!sub.keys?.p256dh||!sub.keys?.auth||String(sub.keys.p256dh).length>180||String(sub.keys.auth).length>100)return no(400,'اشتراک پوش معتبر نیست');
+  const host=new URL(sub.endpoint).hostname.toLowerCase();
+  if(!['fcm.googleapis.com','updates.push.services.mozilla.com','push.services.mozilla.com','web.push.apple.com','wns.notify.windows.com'].includes(host))return no(400,'سرویس پوش مرورگر مجاز نیست');
   await pool.query('INSERT INTO ug_push_subscriptions(user_id,endpoint,p256dh,auth) VALUES($1,$2,$3,$4) ON CONFLICT(endpoint) DO UPDATE SET user_id=EXCLUDED.user_id,p256dh=EXCLUDED.p256dh,auth=EXCLUDED.auth',[u.id,sub.endpoint,sub.keys.p256dh,sub.keys.auth]);
   send(res,201,{ok:true});return true;
  }
