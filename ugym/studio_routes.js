@@ -1,6 +1,6 @@
 'use strict';
 /* UGYM Coach Studio v2: single-tenant private workout, nutrition, progress and notices APIs. */
-module.exports = async function handleStudio({req,res,path:route,body:b,pool,auth,send,fail,audit}){
+module.exports = async function handleStudio({req,res,path:route,body:b,pool,auth,send,fail,audit,sendPush}){
  if(!route.startsWith('/api/v2/'))return false;
  const clip=(v,max=200)=>String(v??'').trim().slice(0,max);
  const id=(v)=>Number.isSafeInteger(Number(v))&&Number(v)>0?Number(v):null;
@@ -162,7 +162,8 @@ module.exports = async function handleStudio({req,res,path:route,body:b,pool,aut
   if(who&&!await getMember(who))return error(404,'ورزشکار پیدا نشد');
   const r=await pool.query("INSERT INTO ug_notices(user_id,title,body,kind,created_by) VALUES($1,$2,$3,$4,$5) RETURNING id",[who,title,body,kind,u.id]);
   await audit(u.id,'notification_created',Number(r.rows[0].id),{audience:who||'all'});
-  send(res,201,{ok:true,id:r.rows[0].id});return true;
+  if(sendPush){try{await sendPush(pool,who,{title,body});}catch(e){console.error('UGYM push delivery error',e.message)}}
+  send(res,201,{ok:true,id:r.rows[0].id,push_delivery_configured:!!process.env.VAPID_PUBLIC_KEY});return true;
  }
  return error(404,'مسیر موردنظر وجود ندارد');
 };
