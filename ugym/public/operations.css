@@ -1,0 +1,33 @@
+/* UGYM premium club operations */
+.ug-ops-head{padding:32px 36px;margin-bottom:22px;border:1px solid #8e75a787;border-radius:26px;background:radial-gradient(circle at 91% -22%,#9973ce70,transparent 58%),linear-gradient(115deg,#2c1f3a,#101724);box-shadow:0 23px 65px #0005}
+.ug-ops-head span{font:800 10px Arial;letter-spacing:1.9px;color:#d9bce9}.ug-ops-head h2{font-size:clamp(23px,3vw,35px);margin:13px 0 6px}.ug-ops-head p{font-size:12px;line-height:2;color:#c5b7d2;max-width:680px;margin:0}
+.ug-ops-grid,.ug-ops-coach-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
+.ug-ops-coach-grid{margin-top:20px}
+.ug-ops-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 3px;border-bottom:1px solid #ffffff15;font-size:12px}
+.ug-ops-row:last-child{border-bottom:0}.ug-ops-row b,.ug-ops-row small{display:block}.ug-ops-row small{font-size:10px;color:#afa0c0;margin-top:4px}
+.ug-ops-badge{display:inline-flex;align-items:center;padding:8px 10px;border:1px solid #c4a4dc6f;border-radius:30px;font-size:10px;font-weight:700;color:#e3cff2;background:#a480d62b;white-space:normal}
+.ug-ops-coach,.ug-ops-locker{border:1px solid #765b956b;border-radius:21px;padding:21px;background:linear-gradient(145deg,#2a223b,#171824);box-shadow:0 18px 35px #0004}
+.ug-ops-coach-head,.ug-ops-locker-top{display:flex;gap:12px;align-items:center;margin-bottom:16px}
+.ug-ops-coach-head>div:nth-child(2),.ug-ops-locker-top>div:nth-child(2){min-width:0;flex:1}
+.ug-ops-coach-head h3,.ug-ops-locker-top h3{margin:0 0 5px;font-size:15px}
+.ug-ops-coach-head span,.ug-ops-locker-top span{font-size:10px;color:#afa1bf;overflow-wrap:anywhere}
+.ug-coach-avatar,.ug-lock-icon{height:44px;width:44px;border-radius:13px;background:linear-gradient(150deg,#9673b7,#372349);display:grid;place-items:center;flex-shrink:0;color:#e7d5ff;font-size:20px}
+.ug-ops-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:12px}
+.ug-ops-actions>*{flex:1;min-width:115px}.ug-ops-actions button{font-size:10px}
+.ug-ops-coach form,.ug-ops-locker form{margin-top:14px;border-top:1px solid #715b8b45;padding-top:12px}
+.ug-ops-coach p{margin:15px 0 0}
+.ug-ops-locker-grid,.ug-integration-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.ug-ops-locker>small{font-size:10px;color:#b9a6c9;display:block;margin:10px 0 8px;line-height:2}
+.ug-ops-description{line-height:2.2;font-size:12px;color:#c7b7d7}
+.ug-integration-card{border:1px solid #9675ac76;border-radius:22px;padding:25px;background:linear-gradient(145deg,#2b2138,#161c2b)}
+.ug-integration-card>span{display:block;font:800 9px Arial;letter-spacing:1.4px;color:#bca2dc}
+.ug-integration-card h3{font-size:18px;margin:14px 0}
+.ug-integration-card p{color:#c3b6d1;font-size:11px;line-height:2.1}
+.ug-reminder-number{font:900 58px Arial;color:#e2c6fc;padding:15px 0;text-shadow:0 7px 40px #d4aeff69}
+.ug-invite-result{background:#baa0ec20;border:1px solid #bca3d97b;border-radius:15px;margin-top:20px;padding:18px}
+.ug-invite-result b{font-size:13px}.ug-invite-result p{font-size:11px;color:#cab6d2;line-height:2}.ug-invite-result button{margin-top:8px}
+.ug-push-preferences{padding:20px;border:1px solid #7e669d7f;border-radius:18px;background:linear-gradient(125deg,#2b1f3d,#191a29);margin-bottom:20px}
+.ug-push-preferences h3{font-size:14px;margin:0 0 10px}.ug-push-preferences p{font-size:11px;color:#cbbbd5;line-height:2}
+.ug-push-preferences button{font-size:11px;padding:11px 15px}
+@media(max-width:850px){.ug-ops-grid,.ug-ops-coach-grid,.ug-ops-locker-grid,.ug-integration-grid{grid-template-columns:1fr}}
+@media(max-width:520px){.ug-ops-head{padding:24px 20px}.ug-ops-coach,.ug-ops-locker{padding:16px}.ug-ops-coach-head,.ug-ops-locker-top{flex-wrap:wrap}.ug-ops-badge{font-size:9px}}
