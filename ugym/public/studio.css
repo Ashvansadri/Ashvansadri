@@ -97,3 +97,12 @@
 @media(max-width:760px){.ug-studio-banner{padding:26px 21px}.ug-studio-banner h2{font-size:27px}.ug-prescription-item{grid-template-columns:155px 1fr}.ug-preview{grid-template-columns:140px 1fr}.ug-prescription-body{padding:12px}.ug-member-movements{grid-template-columns:1fr}.ug-movement-card .ug-exercise-picture{min-height:260px}.ug-exercise-picture>img{min-height:160px}.ug-studio-kpis{gap:7px}.ug-studio-kpis>div{padding:13px 11px}.ug-studio-kpis strong{font-size:26px}}
 @media(max-width:490px){.ug-prescription-item{grid-template-columns:1fr}.ug-prescription-item .ug-exercise-picture{min-height:210px;border-bottom:1px solid #5b486e4d}.ug-prescription-item .ug-exercise-picture img{max-height:225px}.ug-preview{grid-template-columns:1fr}.ug-preview .ug-exercise-picture{height:185px}.ug-meal-grid,.ug-inbox-grid{grid-template-columns:1fr}.ug-inbox-card{padding:15px}.ug-movement-body{padding:18px}.ug-rx span{font-size:9px}.ug-studio-kpis strong{font-size:23px}}
 @media(prefers-reduced-motion:reduce){.ug-exercise-picture.is-motion .ug-start-frame,.ug-exercise-picture.is-motion .ug-end-frame{animation:none!important}.ug-exercise-picture.is-motion .ug-end-frame{display:none!important}.ug-exercise-picture.is-motion .ug-start-frame{opacity:1!important}}
+
+
+.ug-trend-grid{display:grid;grid-template-columns:1fr;gap:12px;margin:17px 0}
+.ug-trend{padding:16px;border:1px solid #987cc064;background:linear-gradient(145deg,#2c233d,#171624);border-radius:16px}
+.ug-trend-top,.ug-trend-foot{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.ug-trend-top b{font-size:12px}.ug-trend-top span{font-size:11px;color:#edceff;font-weight:800}
+.ug-trend svg{width:100%;height:auto;max-height:150px;display:block;margin:10px auto}
+.ug-trend-foot{font-size:9px;color:#a89bb8}
+.ug-trend-empty{border:1px dashed #846998;padding:17px;border-radius:12px;font-size:11px;color:#ac9dbb;line-height:2}
