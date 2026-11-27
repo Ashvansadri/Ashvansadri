@@ -31,3 +31,5 @@
 .ug-push-preferences button{font-size:11px;padding:11px 15px}
 @media(max-width:850px){.ug-ops-grid,.ug-ops-coach-grid,.ug-ops-locker-grid,.ug-integration-grid{grid-template-columns:1fr}}
 @media(max-width:520px){.ug-ops-head{padding:24px 20px}.ug-ops-coach,.ug-ops-locker{padding:16px}.ug-ops-coach-head,.ug-ops-locker-top{flex-wrap:wrap}.ug-ops-badge{font-size:9px}}
+
+#admin-nav [hidden],#member-nav [hidden],.dashboard-area [hidden]{display:none!important}
