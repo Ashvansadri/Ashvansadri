@@ -5,6 +5,9 @@ const path=require('node:path');
 const crypto=require('node:crypto');
 const {Pool}=require('pg');
 const handleStudio=require('./studio_routes');
+const coachRoutes=require('./coach_routes');
+const lockerRoutes=require('./locker_routes');
+const reminders=require('./reminder_routes');
 // Dependency-free PNG fallback icons for Android/iOS installability.
 const zlib=require('node:zlib');
 const iconCache=new Map();
@@ -68,8 +71,10 @@ const value=(x,max)=>x===''||x==null?null:positive(x,max)?Number(x):undefined;
 const idok=(x)=>Number.isSafeInteger(Number(x))&&Number(x)>0;
 async function init(){
   if(!DB_READY){console.warn('UGYM: waiting for DATABASE_URL environment variable');return;}
-  await pool.query("CREATE TABLE IF NOT EXISTS ug_users (id BIGSERIAL PRIMARY KEY, role TEXT NOT NULL CHECK(role IN('admin','member')), full_name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, discipline TEXT NOT NULL DEFAULT 'بدنسازی', goal TEXT NOT NULL DEFAULT '', height_cm NUMERIC(5,1), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
+  await pool.query("CREATE TABLE IF NOT EXISTS ug_users (id BIGSERIAL PRIMARY KEY, role TEXT NOT NULL CHECK(role IN('admin','member','coach')), full_name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, discipline TEXT NOT NULL DEFAULT 'بدنسازی', goal TEXT NOT NULL DEFAULT '', height_cm NUMERIC(5,1), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
   await pool.query("ALTER TABLE ug_users ADD COLUMN IF NOT EXISTS username TEXT");
+  await pool.query("ALTER TABLE ug_users DROP CONSTRAINT IF EXISTS ug_users_role_check");
+  await pool.query("ALTER TABLE ug_users ADD CONSTRAINT ug_users_role_check CHECK(role IN('admin','member','coach'))");
   await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS ug_users_username_unique_ci ON ug_users (lower(username)) WHERE username IS NOT NULL");
   await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS ug_users_single_owner ON ug_users ((role)) WHERE role='admin'");
   await pool.query("CREATE TABLE IF NOT EXISTS ug_owner_invites (token_hash TEXT PRIMARY KEY,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),expires_at TIMESTAMPTZ NOT NULL)");
@@ -114,7 +119,14 @@ async function handler(req,res){
         if(!String(req.headers['content-type']||'').toLowerCase().startsWith('application/json'))return fail(res,415,'فرمت درخواست پشتیبانی نمی‌شود');
       }
       const b=req.method==='POST'?await body(req):{};
-      if(p.startsWith('/api/v2/'))return await handleStudio({req,res,path:p,body:b,pool,auth,send,fail,audit});
+      if(p.startsWith('/api/v3/')){
+        const ctx={req,res,path:p,body:b,pool,auth,send,fail,audit,pwHash,session};
+        if(await coachRoutes(ctx))return;
+        if(await lockerRoutes(ctx))return;
+        if(await reminders.handle(ctx))return;
+        return fail(res,404,'درخواست یافت نشد');
+      }
+      if(p.startsWith('/api/v2/'))return await handleStudio({req,res,path:p,body:b,pool,auth,send,fail,audit,sendPush:reminders.sendPush});
       if(p==='/api/public/payment-info'&&req.method==='GET'){
         res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Vary','Origin');
         const r=await pool.query('SELECT card_number,card_holder,whatsapp,updated_at FROM ug_club_settings WHERE id=1');
@@ -289,7 +301,7 @@ async function handler(req,res){
     const icon=iconPng(p==='/icon-512.png'?512:p==='/icon-192.png'?192:180);
     res.writeHead(200,{'Content-Type':'image/png','Cache-Control':'public,max-age=604800','Content-Length':icon.length});res.end(icon);return;
   }
-  const files={'/':'index.html','/admin':'index.html','/member':'index.html','/setup':'index.html','/login':'index.html','/register':'index.html','/index.html':'index.html','/app.js':'app.js','/style.css':'style.css','/extras.js':'extras.js','/extras.css':'extras.css','/studio.js':'studio.js','/studio.css':'studio.css','/manifest.webmanifest':'manifest.webmanifest','/sw.js':'sw.js','/logo.svg':'logo.svg'};
+  const files={'/':'index.html','/admin':'index.html','/coach':'index.html','/coach-join':'index.html','/member':'index.html','/setup':'index.html','/login':'index.html','/register':'index.html','/index.html':'index.html','/app.js':'app.js','/style.css':'style.css','/extras.js':'extras.js','/extras.css':'extras.css','/studio.js':'studio.js','/studio.css':'studio.css','/operations.js':'operations.js','/operations.css':'operations.css','/manifest.webmanifest':'manifest.webmanifest','/sw.js':'sw.js','/logo.svg':'logo.svg'};
   let file=files[p];if(!file)return fail(res,404,'صفحه یافت نشد');
   const mime={'html':'text/html; charset=utf-8','js':'application/javascript; charset=utf-8','css':'text/css; charset=utf-8','svg':'image/svg+xml','webmanifest':'application/manifest+json'};
   const ext=file.split('.').pop();
