@@ -8,9 +8,10 @@
   },
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check public/app.js"
+    "check": "node --check server.js && node --check studio_routes.js && node --check coach_routes.js && node --check locker_routes.js && node --check reminder_routes.js && node --check public/app.js && node --check public/studio.js && node --check public/operations.js"
   },
   "dependencies": {
-    "pg": "8.13.1"
+    "pg": "8.13.1",
+    "web-push": "3.6.7"
   }
 }
