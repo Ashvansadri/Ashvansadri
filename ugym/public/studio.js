@@ -113,7 +113,40 @@
   const cards=msgs.map(x=>'<article class="ug-inbox-card '+(!x.auto&&!x.is_read?'unread':'')+'"><div class="ug-inbox-icon">'+(x.kind==='payment'?'◈':x.kind==='attendance'?'♙':'✦')+'</div><div><small>'+(x.auto?'یادآوری سامانه':date(x.created_at))+'</small><h3>'+esc(x.title)+'</h3><p>'+esc(x.body)+'</p>'+(!x.auto&&!x.is_read?'<button type="button" class="mini-btn" data-notice-read="'+x.id+'">خواندم ✓</button>':'')+'</div></article>').join('');
   $('member-view').innerHTML=header('صندوق اعلان‌های من','یادآوری شهریه، حضور و پیام‌های باشگاه را در یک جا ببین.')+
    (cards?'<div class="ug-inbox-grid">'+cards+'</div>':empty('اعلان تازه‌ای وجود ندارد'))+
-   '<p class="ug-source-note">یادآوری‌های هوشمند هنگام ورود به پنل به‌روزرسانی می‌شوند؛ ارسال پوش بیرون از اپ هنوز فعال نیست.</p>';
+   '<section class="ug-push-preferences" id="ug-push-preferences"><h3>اعلان روی گوشی</h3><p>در حال بررسی سرویس اعلان گوشی...</p></section><p class="ug-source-note">پیام‌های داخل اپ فعال هستند. اعلان گوشی پس از اتصال سرویس، نصب اپ و رضایت ورزشکار فعال خواهد شد.</p>';
+  updatePushPanel();
+ }
+ async function updatePushPanel(){
+  const place=document.getElementById('ug-push-preferences');if(!place)return;
+  try{
+   const status=await api('/api/v3/integration-status');if(!place.isConnected)return;
+   if(!status.push_enabled){place.innerHTML='<h3>اعلان روی گوشی</h3><p>سرویس پوش هنوز متصل نیست. پیام‌های داخل اپ قابل مشاهده هستند و این گزینه بعد از تنظیم کلیدهای VAPID توسط مدیریت فعال می‌شود.</p>';return;}
+   if(!('serviceWorker'in navigator)||!('PushManager'in window)||!('Notification'in window)){
+    place.innerHTML='<h3>اعلان روی گوشی</h3><p>این مرورگر از اعلان پوش پشتیبانی نمی‌کند؛ در آیفون ابتدا UGYM را از Safari روی صفحه اصلی نصب و از آیکون آن باز کن.</p>';return;
+   }
+   const r=await navigator.serviceWorker.ready;const subscription=await r.pushManager.getSubscription();
+   place.innerHTML='<h3>اعلان روی گوشی</h3><p>برای دریافت پیام‌های باشگاه در زمان بسته‌بودن صفحه، باید خودت اجازه اعلان را صادر کنی. با لغو مجوز، اشتراک حذف می‌شود.</p>'+
+    '<button type="button" class="mini-btn" data-push-'+(subscription?'disable':'enable')+'="1">'+(subscription?'غیرفعال‌کردن اعلان گوشی':'فعال‌کردن اعلان گوشی')+'</button>';
+   state.pushKey=status.push_public_key;
+  }catch(e){if(place.isConnected)place.innerHTML='<h3>اعلان روی گوشی</h3><p>در حال حاضر وضعیت سرویس اعلان قابل دریافت نیست.</p>';}
+ }
+ function urlKey(s){
+  const padding='='.repeat((4-s.length%4)%4);const base64=(s+padding).replace(/-/g,'+').replace(/_/g,'/');
+  return Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
+ }
+ async function pushToggle(enable){
+  if(!('serviceWorker'in navigator)||!('Notification'in window))throw Error('این مرورگر از اعلان گوشی پشتیبانی نمی‌کند');
+  const reg=await navigator.serviceWorker.ready;
+  if(!enable){
+   const current=await reg.pushManager.getSubscription();if(current){await api('/api/v3/member/push/unsubscribe',{endpoint:current.endpoint});await current.unsubscribe();}
+   toast('اعلان گوشی غیرفعال شد');await updatePushPanel();return;
+  }
+  if(!state.pushKey)throw Error('کلید اعلان گوشی هنوز در سامانه تنظیم نشده است');
+  const permission=await Notification.requestPermission();
+  if(permission!=='granted')throw Error('مجوز اعلان گوشی داده نشد');
+  const subscription=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlKey(state.pushKey)});
+  await api('/api/v3/member/push/subscribe',{subscription:subscription.toJSON()});
+  toast('اعلان گوشی فعال شد');await updatePushPanel();
  }
  function mountSelfMeasure(){
   const out=$('member-view');if(!out)return;
@@ -130,9 +163,11 @@
   if(ev.target.matches('[data-exercise-select]'))preview();
  });
  document.addEventListener('click',async ev=>{
-  const t=ev.target.closest('[data-plan-select],[data-plan-publish],[data-item-remove],[data-verify],[data-notice-read],[data-studio-day]');
+  const t=ev.target.closest('[data-plan-select],[data-plan-publish],[data-item-remove],[data-verify],[data-notice-read],[data-studio-day],[data-push-enable],[data-push-disable]');
   if(!t)return;
   try{
+   if(t.dataset.pushEnable){await pushToggle(true);return;}
+   if(t.dataset.pushDisable){await pushToggle(false);return;}
    if(t.dataset.studioDay){state.day=t.dataset.studioDay;renderMember('training');return;}
    if(t.dataset.planSelect){state.plan=t.dataset.planSelect;renderAdmin('studio');return;}
    if(t.dataset.planPublish){if(!confirm('برنامه برای ورزشکار منتشر شود؟ برنامه قبلی بایگانی خواهد شد.'))return;await api('/api/v2/admin/plan/activate',{plan_id:Number(t.dataset.planPublish)});toast('برنامه منتشر شد');renderAdmin('studio');return;}
