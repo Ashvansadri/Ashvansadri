@@ -50,7 +50,7 @@
  }
  async function integrations(out){
   const d=await api('/api/v3/admin/integrations');
-  const names={locker:'کمد هوشمند',push:'اعلان گوشی (Web Push)',sms:'ارسال پیامک',whatsapp:'واتساپ خودکار'};
+  const names={locker:'کمد هوشمند',push:'اعلان گوشی (Web Push)',sms:'ارسال پیامک',whatsapp:'واتساپ خودکار',scheduler:'زمان‌بندی روزانه'};
   const cards=(d.integrations||[]).map(x=>'<article class="ug-integration-card"><span>◈ UGYM INTEGRATIONS</span><h3>'+esc(names[x.code]||x.code)+'</h3>'+badge(x.ready?'آماده اتصال':'اتصال‌نشده')+'<p>'+esc(x.public_note)+'</p></article>').join('');
   out.innerHTML=wrap('مرکز اتصال سرویس‌ها','بخش‌های لازم از هم جدا هستند؛ کلیدهای محرمانه باید بعداً فقط در محیط امن میزبان تنظیم شوند، نه داخل این صفحه یا چت.',
    '<div class="ug-integration-grid">'+cards+'</div><div class="dash-card section-gap"><h3>چه سرویس‌هایی برای فعال‌سازی لازم‌اند؟</h3>'+
