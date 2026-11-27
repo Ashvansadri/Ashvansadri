@@ -1,6 +1,6 @@
 'use strict';
 (()=>{
- const type=document.body.dataset.destination==='admin'?'admin':'member';
+ const type=['admin','member','login','register'].includes(document.body.dataset.destination)?document.body.dataset.destination:'member';
  const target='https://ugym-fitness-club-2026.onrender.com/'+type;
  const health='https://ugym-fitness-club-2026.onrender.com/api/health';
  const status=document.getElementById('status'),detail=document.getElementById('detail');
